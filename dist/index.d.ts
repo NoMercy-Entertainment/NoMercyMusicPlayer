@@ -1,0 +1,30 @@
+import MediaSession from '@nomercy-entertainment/media-session';
+import Queue from './queue';
+import { type Song, TimeState } from './types';
+export default class PlayerCore<S extends Song> extends Queue<S> {
+    mediaSession: MediaSession;
+    constructor();
+    setSiteTitle(title: string): void;
+    dispose(): void;
+    play(): Promise<void>;
+    pause(): void;
+    togglePlayback(): void;
+    stop(): void;
+    setVolume(volume: number): void;
+    getVolume(): number;
+    mute(): void;
+    unmute(): void;
+    toggleMute(): void;
+    seek(time: number): void;
+    getDuration(): number;
+    getCurrentTime(): number;
+    getBuffer(): number;
+    getTimeData(): TimeState;
+    protected _initializeCore(): void;
+    private handleReady;
+    private handlePlay;
+    private handlePause;
+    private handleCurrentSongChange;
+    private handleTimeUpdate;
+    private handleError;
+}
