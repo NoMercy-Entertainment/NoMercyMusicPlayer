@@ -1,6 +1,6 @@
 {
   "name": "@nomercy-entertainment/nomercy-music-player",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Full event-driven music player without a UI.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -40,7 +40,7 @@
     "./*"
   ],
   "exports": {
-    "./index": {
+    ".": {
       "import": "./src/index.ts",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
@@ -74,9 +74,6 @@
       "import": "./src/state.ts",
       "require": "./dist/state.ts",
       "types": "./dist/state.d.ts"
-    },
-    "./src/types": {
-      "types": "./dist/types.d.ts"
     }
   }
 }

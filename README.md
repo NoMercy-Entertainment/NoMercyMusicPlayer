@@ -15,11 +15,11 @@ It is framework-agnostic and can be used with any JavaScript framework.
 
 ## Installation
 ```sh
-npm install @nomercy-entertainment/music-player
+npm install @nomercy-entertainment/nomercy-music-player
 // or
-yarn add @nomercy-entertainment/music-player
+yarn add @nomercy-entertainment/nomercy-music-player
 // or
-pnpm add @nomercy-entertainment/music-player
+pnpm add @nomercy-entertainment/nomercy-music-player
 ```
 
 ## Usage
@@ -28,7 +28,6 @@ pnpm add @nomercy-entertainment/music-player
  
 Vue makes this very easy without the need for a state management library. </br>
 You can create a config for the spectrum analyzer and pass it to the player instance [here](https://audiomotion.dev/demo/fluid.html)
-
 
 Vue 3 example:
 ```typescript
