@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const vue_1 = require("@ionic/vue");
 const state_1 = require("./state");
-const audiomotionAnalyzer_1 = require("./audiomotionAnalyzer");
+const spectrumAnalyzer_1 = require("./spectrumAnalyzer");
 class AudioNode {
     constructor(options, parent) {
         this._audioElement = {};
@@ -329,7 +329,7 @@ class AudioNode {
             return;
         if (!this.context) {
             try {
-                this.motion = (0, audiomotionAnalyzer_1.audioMotion)(this._audioElement, this.motionConfig);
+                this.motion = (0, spectrumAnalyzer_1.spectrumAnalyser)(this._audioElement, this.motionConfig);
                 if (this.motionColors.length) {
                     this.motion.registerGradient('theme', {
                         bgColor: 'transparent',
@@ -339,8 +339,13 @@ class AudioNode {
                     this.motion.gradient = 'theme';
                 }
                 setTimeout(() => {
-                    this.motion.canvas.classList.add('absolute', 'top-0', 'left-80', 'h-80', 'my-12', 'ml-40', 'mr-6', 'w-available', 'overflow-clip', 'opacity-0', 'pointer-events-none');
-                }, 1000);
+                    this.motion.canvas.style.position = 'absolute';
+                    this.motion.canvas.style.height = '320px';
+                    this.motion.canvas.style.width = '1400px';
+                    this.motion.canvas.style.overflow = 'hidden';
+                    this.motion.canvas.style.opacity = '0';
+                    this.motion.canvas.style.pointerEvents = 'none';
+                }, 500);
                 this.context = this.motion.audioCtx;
                 this.context.addEventListener('error', () => {
                     localStorage.setItem('nmplayer-music-supports-audio-context', 'false');

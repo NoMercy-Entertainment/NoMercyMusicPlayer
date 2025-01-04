@@ -3,10 +3,10 @@
 import MediaSession from '@nomercy-entertainment/media-session';
 import Queue from './queue';
 
-import {PlayerOptions, type Song, TimeState} from './types';
+import {PlayerOptions, type BasePlaylistItem, TimeState} from './types';
 import {PlayerState, VolumeState} from "./state";
 
-export default class PlayerCore<S extends Song> extends Queue<S> {
+export class PlayerCore<S extends BasePlaylistItem> extends Queue<S> {
   mediaSession: MediaSession;
 
   constructor(config: PlayerOptions) {
@@ -14,7 +14,9 @@ export default class PlayerCore<S extends Song> extends Queue<S> {
 
 	this._initializeCore();
 
-	window.musicPlayer = this;
+	if (config.expose) {
+	  window.musicPlayer = this;
+	}
 	this.mediaSession = new MediaSession();
 
 	this.baseUrl = config.baseUrl;
@@ -25,10 +27,9 @@ export default class PlayerCore<S extends Song> extends Queue<S> {
 	if (config.motionColors) {
 	  this.motionColors = config.motionColors;
 	}
-  }
-
-  public setSiteTitle(title: string) {
-	this.siteTitle = title;
+	if (config.siteTitle) {
+	  this.siteTitle = config.siteTitle;
+	}
   }
 
   public dispose(): void {
@@ -182,7 +183,7 @@ export default class PlayerCore<S extends Song> extends Queue<S> {
 	this.mediaSession?.setPlaybackState('paused');
   }
 
-  private handleCurrentSongChange(value: Song | null): void {
+  private handleCurrentSongChange(value: BasePlaylistItem | null): void {
 	if (!value) {
 	  this.currentSong = null;
 	  this.mediaSession?.setPlaybackState('none');
@@ -237,3 +238,5 @@ export default class PlayerCore<S extends Song> extends Queue<S> {
 	this.mediaSession?.setPlaybackState('none');
   }
 }
+
+export default PlayerCore;

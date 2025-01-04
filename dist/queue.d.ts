@@ -1,6 +1,6 @@
 import Helpers from './helpers';
-import type { IsShuffling, RepeatState, Song } from './types';
-export default class Queue<S extends Song> extends Helpers<S> {
+import type { IsShuffling, RepeatState, BasePlaylistItem } from './types';
+export default class Queue<S extends BasePlaylistItem> extends Helpers<S> {
     currentSong: S | null;
     protected _repeat: RepeatState;
     protected _queue: Array<S>;

@@ -5,14 +5,14 @@ import AudioNode from './audioNode';
 import type {
   EQBand, EQSliderValues, EqualizerPreset, IsMuted,
   IsPlaying, IsRepeating, IsShuffling, PlayerOptions,
-  RepeatState, Song, Time, TimeState, Volume,
+  RepeatState, BasePlaylistItem, Time, TimeState, Volume,
 } from './types';
 import {PlayerState, VolumeState} from "./state";
 
 import {equalizerBands, equalizerPresets, equalizerSliderValues} from "./equalizer";
 import {ConstructorOptions} from "audiomotion-analyzer";
 
-export default class Helpers<S extends Song> extends EventTarget {
+export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
   public volume: Volume = Number(localStorage.getItem('nmplayer-music-volume')) || 100;
   public muted: IsMuted = false;
   public duration: Time = 0;
@@ -32,7 +32,7 @@ export default class Helpers<S extends Song> extends EventTarget {
   public isSeeking: boolean = false;
   public isTransitioning: boolean = false;
   public newSourceLoaded: boolean = false;
-  public baseUrl?: string = '';
+  public baseUrl?: string = '/';
   public accessToken: string = '';
   protected _options: PlayerOptions = <PlayerOptions>{};
 
@@ -148,16 +148,16 @@ export default class Helpers<S extends Song> extends EventTarget {
 	this.accessToken = accessToken;
   }
 
-  public setBaseUrl(serverLocation?: string): void {
-	this.baseUrl = serverLocation;
+  public setBaseUrl(baseUrl?: string): void {
+	this.baseUrl = baseUrl;
   }
 
   public getNewSource(newItem: S | null): Promise<string> {
-	if (!newItem?.folder) return Promise.resolve('');
+	if (!newItem?.path) throw new Error('No path provided for new source');
 	return new Promise((resolve) => {
 	  return resolve(
 		encodeURI(
-		  `${this.baseUrl}/${newItem?.folder_id}${newItem?.folder}${newItem?.filename}?token=${this.accessToken}`
+		  `${this.baseUrl}${newItem?.path}${this.accessToken ? `?token=${this.accessToken}` : ''}`
 		).replace(/#/u, '%23')
 	  );
 	}) as unknown as Promise<string>;
@@ -174,7 +174,7 @@ export default class Helpers<S extends Song> extends EventTarget {
 		  continue;
 		}
 
-		this?.setFilter(band);
+		this.setFilter(band);
 	  }
 	}
   }

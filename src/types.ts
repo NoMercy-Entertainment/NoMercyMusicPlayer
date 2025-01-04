@@ -1,10 +1,15 @@
-import PlayerCore from "./index";
 import {ConstructorOptions} from "audiomotion-analyzer";
+import PlayerCore from "./index";
 
 export interface PlayerOptions {
+  // The base URL of the resources
   baseUrl?: string;
+  // Used to suffix the site title to the window title when setting the song title
+  siteTitle: string;
   motionConfig?: ConstructorOptions;
   motionColors?: string[];
+  // Exposes the music player to the window object
+  expose: boolean;
 }
 
 export interface AudioOptions {
@@ -67,17 +72,12 @@ export interface EqualizerPreset {
 declare global {
   // noinspection JSUnusedGlobalSymbols
   interface Window {
-	musicPlayer: PlayerCore<Song>;
+	musicPlayer: PlayerCore<BasePlaylistItem>;
   }
 }
 
-export interface Song {
-  id: string;
+export interface BasePlaylistItem {
   name: string;
-  track: number;
-  disc: number;
-  folder: string;
-  filename: string;
   path: string;
   album_track: {
 	name: string;
@@ -87,7 +87,5 @@ export interface Song {
 	name: string;
 	[key: string]: any;
   }[];
-  origin: string;
-
   [key: string]: any;
 }

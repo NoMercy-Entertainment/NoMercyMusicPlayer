@@ -2,13 +2,12 @@ import {isPlatform} from '@ionic/vue';
 
 import Helpers from './helpers';
 
-import type {AudioOptions, EQBand, Song} from './types';
+import type {AudioOptions, EQBand, BasePlaylistItem} from './types';
 import {PlayerState} from "./state";
 
-import {audioMotion, AudioMotionAnalyzer} from "./audiomotionAnalyzer";
-import {ConstructorOptions} from "audiomotion-analyzer";
+import {spectrumAnalyser, AudioMotionAnalyzer, type ConstructorOptions} from "./spectrumAnalyzer";
 
-export default class AudioNode<S extends Song> {
+export default class AudioNode<S extends BasePlaylistItem> {
   _audioElement: HTMLAudioElement = <HTMLAudioElement>{};
   public state: PlayerState = PlayerState.STOPPED;
   public duration: number = 0;
@@ -472,7 +471,7 @@ export default class AudioNode<S extends Song> {
 
 	if (!this.context) {
 	  try {
-		this.motion = audioMotion(this._audioElement, this.motionConfig);
+		this.motion = spectrumAnalyser(this._audioElement, this.motionConfig);
 
 		if (this.motionColors.length) {
 		  this.motion.registerGradient('theme', {
@@ -485,8 +484,13 @@ export default class AudioNode<S extends Song> {
 		}
 
 		setTimeout(() => {
-		  this.motion!.canvas.classList.add('absolute', 'top-0', 'left-80', 'h-80', 'my-12', 'ml-40', 'mr-6', 'w-available', 'overflow-clip', 'opacity-0', 'pointer-events-none');
-		}, 1000);
+		  this.motion!.canvas.style.position = 'absolute';
+		  this.motion!.canvas.style.height = '320px';
+		  this.motion!.canvas.style.width = '1400px';
+		  this.motion!.canvas.style.overflow = 'hidden';
+		  this.motion!.canvas.style.opacity = '0';
+		  this.motion!.canvas.style.pointerEvents = 'none';
+		}, 500);
 
 		this.context = this.motion.audioCtx;
 

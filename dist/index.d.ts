@@ -1,10 +1,9 @@
 import MediaSession from '@nomercy-entertainment/media-session';
 import Queue from './queue';
-import { PlayerOptions, type Song, TimeState } from './types';
-export default class PlayerCore<S extends Song> extends Queue<S> {
+import { PlayerOptions, type BasePlaylistItem, TimeState } from './types';
+export declare class PlayerCore<S extends BasePlaylistItem> extends Queue<S> {
     mediaSession: MediaSession;
     constructor(config: PlayerOptions);
-    setSiteTitle(title: string): void;
     dispose(): void;
     play(): Promise<void>;
     pause(): void;
@@ -28,3 +27,4 @@ export default class PlayerCore<S extends Song> extends Queue<S> {
     private handleTimeUpdate;
     private handleError;
 }
+export default PlayerCore;

@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.PlayerCore = void 0;
 const media_session_1 = __importDefault(require("@nomercy-entertainment/media-session"));
 const queue_1 = __importDefault(require("./queue"));
 const state_1 = require("./state");
@@ -11,7 +12,9 @@ class PlayerCore extends queue_1.default {
     constructor(config) {
         super();
         this._initializeCore();
-        window.musicPlayer = this;
+        if (config.expose) {
+            window.musicPlayer = this;
+        }
         this.mediaSession = new media_session_1.default();
         this.baseUrl = config.baseUrl;
         if (config.motionConfig) {
@@ -20,9 +23,9 @@ class PlayerCore extends queue_1.default {
         if (config.motionColors) {
             this.motionColors = config.motionColors;
         }
-    }
-    setSiteTitle(title) {
-        this.siteTitle = title;
+        if (config.siteTitle) {
+            this.siteTitle = config.siteTitle;
+        }
     }
     dispose() {
         this._audioElement1.dispose();
@@ -180,4 +183,5 @@ class PlayerCore extends queue_1.default {
         this.mediaSession?.setPlaybackState('none');
     }
 }
+exports.PlayerCore = PlayerCore;
 exports.default = PlayerCore;

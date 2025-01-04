@@ -29,7 +29,7 @@ class Helpers extends EventTarget {
         this.isSeeking = false;
         this.isTransitioning = false;
         this.newSourceLoaded = false;
-        this.baseUrl = '';
+        this.baseUrl = '/';
         this.accessToken = '';
         this._options = {};
         this.context = null;
@@ -124,14 +124,14 @@ class Helpers extends EventTarget {
     setAccessToken(accessToken) {
         this.accessToken = accessToken;
     }
-    setBaseUrl(serverLocation) {
-        this.baseUrl = serverLocation;
+    setBaseUrl(baseUrl) {
+        this.baseUrl = baseUrl;
     }
     getNewSource(newItem) {
-        if (!newItem?.folder)
-            return Promise.resolve('');
+        if (!newItem?.path)
+            throw new Error('No path provided for new source');
         return new Promise((resolve) => {
-            return resolve(encodeURI(`${this.baseUrl}/${newItem?.folder_id}${newItem?.folder}${newItem?.filename}?token=${this.accessToken}`).replace(/#/u, '%23'));
+            return resolve(encodeURI(`${this.baseUrl}${newItem?.path}${this.accessToken ? `?token=${this.accessToken}` : ''}`).replace(/#/u, '%23'));
         });
     }
     loadEqualizerSettings() {
@@ -143,7 +143,7 @@ class Helpers extends EventTarget {
                     this?.setPreGain(band.gain);
                     continue;
                 }
-                this?.setFilter(band);
+                this.setFilter(band);
             }
         }
     }

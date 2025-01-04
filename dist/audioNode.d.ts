@@ -1,9 +1,8 @@
 import Helpers from './helpers';
-import type { AudioOptions, EQBand, Song } from './types';
+import type { AudioOptions, EQBand, BasePlaylistItem } from './types';
 import { PlayerState } from "./state";
-import { AudioMotionAnalyzer } from "./audiomotionAnalyzer";
-import { ConstructorOptions } from "audiomotion-analyzer";
-export default class AudioNode<S extends Song> {
+import { AudioMotionAnalyzer, type ConstructorOptions } from "./spectrumAnalyzer";
+export default class AudioNode<S extends BasePlaylistItem> {
     _audioElement: HTMLAudioElement;
     state: PlayerState;
     duration: number;

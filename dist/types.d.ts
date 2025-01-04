@@ -1,9 +1,11 @@
-import PlayerCore from "./index";
 import { ConstructorOptions } from "audiomotion-analyzer";
+import PlayerCore from "./index";
 export interface PlayerOptions {
     baseUrl?: string;
+    siteTitle: string;
     motionConfig?: ConstructorOptions;
     motionColors?: string[];
+    expose: boolean;
 }
 export interface AudioOptions {
     id: number;
@@ -61,16 +63,11 @@ export interface EqualizerPreset {
 }
 declare global {
     interface Window {
-        musicPlayer: PlayerCore<Song>;
+        musicPlayer: PlayerCore<BasePlaylistItem>;
     }
 }
-export interface Song {
-    id: string;
+export interface BasePlaylistItem {
     name: string;
-    track: number;
-    disc: number;
-    folder: string;
-    filename: string;
     path: string;
     album_track: {
         name: string;
@@ -80,6 +77,5 @@ export interface Song {
         name: string;
         [key: string]: any;
     }[];
-    origin: string;
     [key: string]: any;
 }

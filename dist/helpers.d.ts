@@ -1,8 +1,8 @@
 import AudioNode from './audioNode';
-import type { EQBand, EQSliderValues, EqualizerPreset, IsMuted, IsPlaying, IsRepeating, IsShuffling, PlayerOptions, RepeatState, Song, Time, TimeState, Volume } from './types';
+import type { EQBand, EQSliderValues, EqualizerPreset, IsMuted, IsPlaying, IsRepeating, IsShuffling, PlayerOptions, RepeatState, BasePlaylistItem, Time, TimeState, Volume } from './types';
 import { PlayerState, VolumeState } from "./state";
 import { ConstructorOptions } from "audiomotion-analyzer";
-export default class Helpers<S extends Song> extends EventTarget {
+export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
     volume: Volume;
     muted: IsMuted;
     duration: Time;
@@ -42,7 +42,7 @@ export default class Helpers<S extends Song> extends EventTarget {
     protected _nextAudio: AudioNode<S>;
     constructor();
     setAccessToken(accessToken: string): void;
-    setBaseUrl(serverLocation?: string): void;
+    setBaseUrl(baseUrl?: string): void;
     getNewSource(newItem: S | null): Promise<string>;
     loadEqualizerSettings(): void;
     setPreGain(gain: number): void;
