@@ -31,15 +31,15 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "v${PACKAGE_VERSION}" -m "Release v${PACKAGE_VERSION}"
-          git push origin "v${PACKAGE_VERSION}"
+          git tag -a "${PACKAGE_VERSION}" -m "Release ${PACKAGE_VERSION}"
+          git push origin "${PACKAGE_VERSION}"
 
       # Step 5: Create GitHub release
       - name: Create GitHub Release
         uses: actions/create-release@v1
         with:
-          tag_name: "v${{ env.PACKAGE_VERSION }}"
-          release_name: "Release v${{ env.PACKAGE_VERSION }}"
+          tag_name: "${{ env.PACKAGE_VERSION }}"
+          release_name: "Release ${{ env.PACKAGE_VERSION }}"
           draft: false
           prerelease: false
         env:
