@@ -1,6 +1,6 @@
 {
   "name": "@nomercy-entertainment/nomercy-music-player",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Full event-driven music player without a UI.",
   "type": "commonjs",
   "main": "./dist/index.js",
@@ -25,7 +25,12 @@
     "type": "git",
     "url": "git+https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer.git"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
+  "keywords": [
+    "music",
+    "player",
+    "NoMercy"
+  ],
   "dependencies": {
     "@ionic/vue": "^8.4.1",
     "@nomercy-entertainment/media-session": "^0.1.10",

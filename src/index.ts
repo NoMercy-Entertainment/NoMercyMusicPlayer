@@ -206,7 +206,7 @@ export class PlayerCore<S extends BasePlaylistItem> extends Queue<S> {
 	  title: `${this.currentSong?.name}`,
 	  artist: `${this.currentSong?.artist_track?.[0]?.name} ${feat}`,
 	  album: this.currentSong?.album_track?.[0]?.name ?? '',
-	  artwork: this.currentSong?.cover ? `${this.baseUrl}/images/music${this.currentSong?.cover}` : undefined,
+	  artwork: this.currentSong?.cover ? `${this.baseUrl}${this.currentSong?.cover}` : undefined,
 	});
   }
 
