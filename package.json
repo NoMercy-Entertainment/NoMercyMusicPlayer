@@ -1,9 +1,19 @@
 {
   "name": "@nomercy-entertainment/nomercy-music-player",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Full event-driven music player without a UI.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "./*"
+  ],
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "build": "tsc",
     "lint": "eslint --fix .",
@@ -13,7 +23,7 @@
   "author": "NoMercy Entertainment",
   "repository": {
     "type": "git",
-    "url": "https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer.git"
+    "url": "git+https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer.git"
   },
   "license": "MIT",
   "dependencies": {
@@ -33,47 +43,5 @@
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
   "publishConfig": {
     "access": "public"
-  },
-  "files": [
-    "dist",
-    "src",
-    "./*"
-  ],
-  "exports": {
-    ".": {
-      "import": "./src/index.ts",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./spectrumAnalyzer": {
-      "import": "./src/spectrumAnalyzer.ts",
-      "require": "./dist/spectrumAnalyzer.js",
-      "types": "./dist/spectrumAnalyzer.d.ts"
-    },
-    "./src/audioNode": {
-      "import": "./src/audioNode.ts",
-      "require": "./dist/audioNode.ts",
-      "types": "./dist/audioNode.d.ts"
-    },
-    "./src/equalizer": {
-      "import": "./src/equalizer.ts",
-      "require": "./dist/equalizer.ts",
-      "types": "./dist/equalizer.d.ts"
-    },
-    "./src/helpers": {
-      "import": "./src/helpers.ts",
-      "require": "./dist/helpers.ts",
-      "types": "./dist/helpers.d.ts"
-    },
-    "./src/queue": {
-      "import": "./src/queue.ts",
-      "require": "./dist/queue.ts",
-      "types": "./dist/queue.d.ts"
-    },
-    "./src/state": {
-      "import": "./src/state.ts",
-      "require": "./dist/state.ts",
-      "types": "./dist/state.d.ts"
-    }
   }
 }
