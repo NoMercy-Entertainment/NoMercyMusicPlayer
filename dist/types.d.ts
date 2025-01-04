@@ -1,5 +1,9 @@
 import PlayerCore from "./index";
+import { ConstructorOptions } from "audiomotion-analyzer";
 export interface PlayerOptions {
+    baseUrl?: string;
+    motionConfig?: ConstructorOptions;
+    motionColors?: string[];
 }
 export interface AudioOptions {
     id: number;
@@ -7,6 +11,8 @@ export interface AudioOptions {
     prefetchLeeway?: number;
     fadeDuration?: number;
     bands: EQBand[];
+    motionColors: string[];
+    motionConfig: ConstructorOptions;
 }
 export interface TimeState {
     buffered: number;
@@ -18,7 +24,6 @@ export interface TimeState {
 export type RepeatState = 'off' | 'one' | 'all';
 export type Time = number;
 export type Volume = number;
-export type Item = Song;
 export type IsPlaying = boolean;
 export type IsMuted = boolean;
 export type IsShuffling = boolean;
@@ -69,9 +74,11 @@ export interface Song {
     path: string;
     album_track: {
         name: string;
+        [key: string]: any;
     }[];
     artist_track: {
         name: string;
+        [key: string]: any;
     }[];
     origin: string;
     [key: string]: any;

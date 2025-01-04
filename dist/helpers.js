@@ -29,7 +29,7 @@ class Helpers extends EventTarget {
         this.isSeeking = false;
         this.isTransitioning = false;
         this.newSourceLoaded = false;
-        this.serverLocation = '';
+        this.baseUrl = '';
         this.accessToken = '';
         this._options = {};
         this.context = null;
@@ -37,16 +37,75 @@ class Helpers extends EventTarget {
         this.filters = [];
         this.panner = null;
         this.siteTitle = 'NoMercy Player';
+        this.motionConfig = {
+            alphaBars: true,
+            ansiBands: true,
+            barSpace: 0.25,
+            bgAlpha: 0,
+            channelLayout: "dual-horizontal",
+            colorMode: "bar-level",
+            fadePeaks: false,
+            fftSize: 16384,
+            fillAlpha: 0.5,
+            frequencyScale: "log",
+            gravity: 3.8,
+            height: undefined,
+            ledBars: false,
+            lineWidth: 5,
+            linearAmplitude: true,
+            linearBoost: 1.4,
+            loRes: false,
+            lumiBars: false,
+            maxDecibels: -35,
+            maxFPS: 60,
+            maxFreq: 16000,
+            minDecibels: -85,
+            minFreq: 30,
+            mirror: 0,
+            mode: 2,
+            noteLabels: false,
+            outlineBars: false,
+            overlay: true,
+            peakFadeTime: 750,
+            peakHoldTime: 500,
+            peakLine: false,
+            radial: false,
+            radialInvert: false,
+            radius: 0.3,
+            reflexAlpha: 1,
+            reflexBright: 1,
+            reflexFit: true,
+            reflexRatio: 0.5,
+            roundBars: false,
+            showBgColor: false,
+            showFPS: false,
+            showPeaks: false,
+            showScaleX: false,
+            showScaleY: false,
+            smoothing: 0.7,
+            spinSpeed: 1,
+            splitGradient: false,
+            trueLeds: false,
+            useCanvas: true,
+            volume: 1,
+            weightingFilter: "D",
+            width: undefined,
+        };
+        this.motionColors = [];
         this.equalizerPanning = 0;
         this._audioElement1 = new audioNode_1.default({
             id: 1,
             volume: this.volume / 100,
             bands: equalizer_1.equalizerBands,
+            motionConfig: this.motionConfig,
+            motionColors: this.motionColors
         }, this);
         this._audioElement2 = new audioNode_1.default({
             id: 2,
             volume: this.volume / 100,
             bands: equalizer_1.equalizerBands,
+            motionConfig: this.motionConfig,
+            motionColors: this.motionColors
         }, this);
         this._currentAudio = this._audioElement1;
         this._nextAudio = this._audioElement2;
@@ -65,14 +124,14 @@ class Helpers extends EventTarget {
     setAccessToken(accessToken) {
         this.accessToken = accessToken;
     }
-    setServerLocation(serverLocation) {
-        this.serverLocation = serverLocation;
+    setBaseUrl(serverLocation) {
+        this.baseUrl = serverLocation;
     }
     getNewSource(newItem) {
         if (!newItem?.folder)
             return Promise.resolve('');
         return new Promise((resolve) => {
-            return resolve(encodeURI(`${this.serverLocation}/${newItem?.folder_id}${newItem?.folder}${newItem?.filename}?token=${this.accessToken}`).replace(/#/u, '%23'));
+            return resolve(encodeURI(`${this.baseUrl}/${newItem?.folder_id}${newItem?.folder}${newItem?.filename}?token=${this.accessToken}`).replace(/#/u, '%23'));
         });
     }
     loadEqualizerSettings() {

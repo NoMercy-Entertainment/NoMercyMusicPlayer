@@ -8,11 +8,18 @@ const media_session_1 = __importDefault(require("@nomercy-entertainment/media-se
 const queue_1 = __importDefault(require("./queue"));
 const state_1 = require("./state");
 class PlayerCore extends queue_1.default {
-    constructor() {
+    constructor(config) {
         super();
         this._initializeCore();
         window.musicPlayer = this;
         this.mediaSession = new media_session_1.default();
+        this.baseUrl = config.baseUrl;
+        if (config.motionConfig) {
+            this.motionConfig = config.motionConfig;
+        }
+        if (config.motionColors) {
+            this.motionColors = config.motionColors;
+        }
     }
     setSiteTitle(title) {
         this.siteTitle = title;
@@ -148,7 +155,7 @@ class PlayerCore extends queue_1.default {
             title: `${this.currentSong?.name}`,
             artist: `${this.currentSong?.artist_track?.[0]?.name} ${feat}`,
             album: this.currentSong?.album_track?.[0]?.name ?? '',
-            artwork: this.currentSong?.cover ? `${this.serverLocation}/images/music${this.currentSong?.cover}` : undefined,
+            artwork: this.currentSong?.cover ? `${this.baseUrl}/images/music${this.currentSong?.cover}` : undefined,
         });
     }
     handleTimeUpdate(data) {

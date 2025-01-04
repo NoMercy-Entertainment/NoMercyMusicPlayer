@@ -202,7 +202,6 @@ class Queue extends helpers_1.default {
         this.on('ended', (el) => {
             if (el == this._currentAudio.getAudioElement()) {
                 this.currentSong = null;
-                // this.emit('song', null);
             }
         });
         this.on('error', this.next.bind(this));

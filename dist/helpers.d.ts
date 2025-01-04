@@ -1,6 +1,7 @@
 import AudioNode from './audioNode';
 import type { EQBand, EQSliderValues, EqualizerPreset, IsMuted, IsPlaying, IsRepeating, IsShuffling, PlayerOptions, RepeatState, Song, Time, TimeState, Volume } from './types';
 import { PlayerState, VolumeState } from "./state";
+import { ConstructorOptions } from "audiomotion-analyzer";
 export default class Helpers<S extends Song> extends EventTarget {
     volume: Volume;
     muted: IsMuted;
@@ -21,7 +22,7 @@ export default class Helpers<S extends Song> extends EventTarget {
     isSeeking: boolean;
     isTransitioning: boolean;
     newSourceLoaded: boolean;
-    serverLocation?: string;
+    baseUrl?: string;
     accessToken: string;
     protected _options: PlayerOptions;
     context: AudioContext | null;
@@ -29,6 +30,8 @@ export default class Helpers<S extends Song> extends EventTarget {
     protected filters: BiquadFilterNode[];
     protected panner: StereoPannerNode | null;
     protected siteTitle: string;
+    protected motionConfig: ConstructorOptions;
+    protected motionColors: string[];
     equalizerPanning: number;
     equalizerSliderValues: EQSliderValues;
     equalizerBands: EQBand[];
@@ -39,7 +42,7 @@ export default class Helpers<S extends Song> extends EventTarget {
     protected _nextAudio: AudioNode<S>;
     constructor();
     setAccessToken(accessToken: string): void;
-    setServerLocation(serverLocation?: string): void;
+    setBaseUrl(serverLocation?: string): void;
     getNewSource(newItem: S | null): Promise<string>;
     loadEqualizerSettings(): void;
     setPreGain(gain: number): void;

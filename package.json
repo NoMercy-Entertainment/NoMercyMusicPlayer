@@ -40,13 +40,43 @@
     "./*"
   ],
   "exports": {
-    "./src/index": {
+    "./index": {
       "import": "./src/index.ts",
-      "require": "./dist/index.js"
-    },
-    "./dist/index": {
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./audiomotionAnalyzer": {
+      "import": "./src/audiomotionAnalyzer.ts",
+      "require": "./dist/audiomotionAnalyzer.js",
+      "types": "./dist/audiomotionAnalyzer.d.ts"
+    },
+    "./src/audioNode": {
+      "import": "./src/audioNode.ts",
+      "require": "./dist/audioNode.ts",
+      "types": "./dist/audioNode.d.ts"
+    },
+    "./src/equalizer": {
+      "import": "./src/equalizer.ts",
+      "require": "./dist/equalizer.ts",
+      "types": "./dist/equalizer.d.ts"
+    },
+    "./src/helpers": {
+      "import": "./src/helpers.ts",
+      "require": "./dist/helpers.ts",
+      "types": "./dist/helpers.d.ts"
+    },
+    "./src/queue": {
+      "import": "./src/queue.ts",
+      "require": "./dist/queue.ts",
+      "types": "./dist/queue.d.ts"
+    },
+    "./src/state": {
+      "import": "./src/state.ts",
+      "require": "./dist/state.ts",
+      "types": "./dist/state.d.ts"
+    },
+    "./src/types": {
+      "types": "./dist/types.d.ts"
     }
   }
 }

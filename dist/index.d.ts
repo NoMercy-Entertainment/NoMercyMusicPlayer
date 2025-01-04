@@ -1,9 +1,9 @@
 import MediaSession from '@nomercy-entertainment/media-session';
 import Queue from './queue';
-import { type Song, TimeState } from './types';
+import { PlayerOptions, type Song, TimeState } from './types';
 export default class PlayerCore<S extends Song> extends Queue<S> {
     mediaSession: MediaSession;
-    constructor();
+    constructor(config: PlayerOptions);
     setSiteTitle(title: string): void;
     dispose(): void;
     play(): Promise<void>;

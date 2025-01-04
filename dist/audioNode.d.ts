@@ -1,7 +1,8 @@
 import Helpers from './helpers';
 import type { AudioOptions, EQBand, Song } from './types';
 import { PlayerState } from "./state";
-import { AudioMotionAnalyzer } from "./audiomotion-analyzer";
+import { AudioMotionAnalyzer } from "./audiomotionAnalyzer";
+import { ConstructorOptions } from "audiomotion-analyzer";
 export default class AudioNode<S extends Song> {
     _audioElement: HTMLAudioElement;
     state: PlayerState;
@@ -13,6 +14,8 @@ export default class AudioNode<S extends Song> {
     motion: AudioMotionAnalyzer | null;
     protected options: AudioOptions;
     protected parent: Helpers<S>;
+    protected motionConfig: ConstructorOptions;
+    protected motionColors: string[];
     protected fadeDuration: number;
     protected prefetchLeeway: number;
     protected crossFadeSteps: number;

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const vue_1 = require("@ionic/vue");
 const state_1 = require("./state");
-const audiomotion_analyzer_1 = require("./audiomotion-analyzer");
+const audiomotionAnalyzer_1 = require("./audiomotionAnalyzer");
 class AudioNode {
     constructor(options, parent) {
         this._audioElement = {};
@@ -14,6 +14,15 @@ class AudioNode {
         this.context = null;
         this.motion = null;
         this.options = {};
+        this.motionColors = [
+            '#ff0000',
+            '#ffff00',
+            '#00ff00',
+            '#00ffff',
+            '#0000ff',
+            '#ff00ff',
+            '#ff0000',
+        ];
         this.fadeDuration = 3;
         this.prefetchLeeway = 10;
         this.crossFadeSteps = 20;
@@ -32,6 +41,8 @@ class AudioNode {
         this.prefetchLeeway = options.prefetchLeeway ?? 10;
         this.fadeDuration = options.fadeDuration ?? 3;
         this.bands = options.bands;
+        this.motionConfig = options.motionConfig;
+        this.motionColors = options.motionColors;
         this._initialize();
     }
     dispose() {
@@ -125,7 +136,6 @@ class AudioNode {
     }
     _fadeIn(firstRun = false) {
         if (firstRun) {
-            // console.log('first-in', this._audioElement.id, this.fadeInVolume, this.volume, this.crossFadeSteps);
             this.fadeVolume(0);
             this.fadeInVolume = 0;
         }
@@ -141,7 +151,6 @@ class AudioNode {
         if (this.fadeInVolume > 100) {
             this.fadeInVolume = 100;
         }
-        // console.log('in', this._audioElement.id, this.fadeInVolume, this.volume, this.crossFadeSteps);
         this.fadeVolume(this.fadeInVolume);
         if (this.fadeInVolume >= this.volume - this.crossFadeSteps * 12) {
             this.parent.emit('nextSong');
@@ -150,7 +159,6 @@ class AudioNode {
     _fadeOut(firstRun = false) {
         this.isFading = true;
         if (firstRun) {
-            // console.log('first-out', this._audioElement.id, this.fadeOutVolume, this.volume, this.crossFadeSteps);
             this.fadeOutVolume = this.volume;
         }
         if (this.fadeOutVolume > 0) {
@@ -163,7 +171,6 @@ class AudioNode {
         if (this.fadeOutVolume < 0) {
             this.fadeOutVolume = 0;
         }
-        // console.log('out', this._audioElement.id, this.fadeOutVolume, this.volume, this.crossFadeSteps);
         this.fadeVolume(this.fadeOutVolume);
         if (this.fadeOutVolume == 0) {
             this.pause();
@@ -322,15 +329,18 @@ class AudioNode {
             return;
         if (!this.context) {
             try {
-                this.motion = (0, audiomotion_analyzer_1.audioMotion)(this._audioElement);
-                this.motion.registerGradient('theme', {
-                    bgColor: 'transparent',
-                    dir: 'h',
-                    colorStops: [
-                        getComputedStyle(document.getElementById('audio-color')).backgroundColor
-                    ]
-                });
-                this.motion.gradient = 'theme';
+                this.motion = (0, audiomotionAnalyzer_1.audioMotion)(this._audioElement, this.motionConfig);
+                if (this.motionColors.length) {
+                    this.motion.registerGradient('theme', {
+                        bgColor: 'transparent',
+                        dir: 'h',
+                        colorStops: this.motionColors
+                    });
+                    this.motion.gradient = 'theme';
+                }
+                setTimeout(() => {
+                    this.motion.canvas.classList.add('absolute', 'top-0', 'left-80', 'h-80', 'my-12', 'ml-40', 'mr-6', 'w-available', 'overflow-clip', 'opacity-0', 'pointer-events-none');
+                }, 1000);
                 this.context = this.motion.audioCtx;
                 this.context.addEventListener('error', () => {
                     localStorage.setItem('nmplayer-music-supports-audio-context', 'false');
