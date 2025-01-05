@@ -146,6 +146,9 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
 
   public setAccessToken(accessToken: string): void {
 	this.accessToken = accessToken;
+
+	this._audioElement1.setAccessToken(accessToken);
+	this._audioElement2.setAccessToken(accessToken);
   }
 
   public setBaseUrl(baseUrl?: string): void {
@@ -157,7 +160,7 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
 	return new Promise((resolve) => {
 	  return resolve(
 		encodeURI(
-		  `${this.baseUrl}${newItem?.path}${this.accessToken ? `?token=${this.accessToken}` : ''}`
+		  `${this.baseUrl}${newItem?.path}`
 		).replace(/#/u, '%23')
 	  );
 	}) as unknown as Promise<string>;

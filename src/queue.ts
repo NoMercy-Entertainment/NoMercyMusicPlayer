@@ -81,15 +81,16 @@ export default class Queue<S extends BasePlaylistItem> extends Helpers<S> {
 
 	if (!payload) return;
 
-	this.getNewSource(payload).then((src) => {
-	  this._currentAudio.setSource(src);
-	  setTimeout(() => {
-		this._currentAudio.play().then();
-	  }, 150);
-	  this._currentAudio
-		.getAudioElement()
-		.setAttribute('data-src', payload?.id?.toString());
-	});
+	this.getNewSource(payload)
+		.then((src) => {
+			this._currentAudio.setSource(src);
+			this._currentAudio.play()
+				.then(() => {
+					this._currentAudio
+						.getAudioElement()
+						.setAttribute('data-src', payload?.id?.toString());
+				  });
+		});
   }
 
   public next() {

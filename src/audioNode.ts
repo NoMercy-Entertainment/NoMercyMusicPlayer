@@ -3,12 +3,14 @@ import {isPlatform} from '@ionic/vue';
 import Helpers from './helpers';
 
 import type {AudioOptions, EQBand, BasePlaylistItem} from './types';
+import HLS from 'hls.js';
 import {PlayerState} from "./state";
 
 import {spectrumAnalyser, AudioMotionAnalyzer, type ConstructorOptions} from "./spectrumAnalyzer";
 
 export default class AudioNode<S extends BasePlaylistItem> {
   _audioElement: HTMLAudioElement = <HTMLAudioElement>{};
+  public hls: HLS | undefined;
   public state: PlayerState = PlayerState.STOPPED;
   public duration: number = 0;
   public currentTime: number = 0;
@@ -17,6 +19,8 @@ export default class AudioNode<S extends BasePlaylistItem> {
   public isFading: boolean = false;
   public context: AudioContext | null = null;
   public motion: AudioMotionAnalyzer | null = null;
+
+  private accessToken?: string;
 
   protected options: AudioOptions = <AudioOptions>{};
   protected parent: Helpers<S>;
@@ -64,10 +68,47 @@ export default class AudioNode<S extends BasePlaylistItem> {
 	this._audioElement.remove();
   }
 
-  public setSource(src: string) {
-	this._audioElement.src = src;
-	return this;
-  }
+	public setAccessToken(accessToken: string): void {
+		this.accessToken = accessToken;
+	}
+
+	public setSource(url: string): AudioNode<S> {
+		this._audioElement.pause();
+		this._audioElement.removeAttribute('src');
+
+		if (!url.endsWith('.m3u8')) {
+			this.hls?.destroy();
+			this.hls = undefined;
+
+			this._audioElement.src = `${url}${this.accessToken ? `?token=${this.accessToken}` : ''}`;
+		}
+		else if (HLS.isSupported()) {
+			this.hls ??= new HLS({
+				debug: false,
+				enableWorker: true,
+				lowLatencyMode: true,
+				maxBufferHole: 0,
+				maxBufferLength: 30,
+				maxBufferSize: 0,
+				autoStartLoad: true,
+				testBandwidth: true,
+
+				xhrSetup: (xhr) => {
+					if (this.accessToken) {
+						xhr.setRequestHeader('authorization', `Bearer ${this.accessToken}`);
+					}
+				},
+			});
+
+			this.hls?.loadSource(url);
+			this.hls?.attachMedia(this._audioElement);
+		}
+		else if (this._audioElement.canPlayType('application/vnd.apple.mpegurl')) {
+			this._audioElement.src = `${url}${this.accessToken ? `?token=${this.accessToken}` : ''}`;
+		}
+
+		return this;
+	}
 
   public play(): Promise<void> {
 	return this._audioElement.play();

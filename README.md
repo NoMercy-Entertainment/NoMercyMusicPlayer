@@ -1,17 +1,20 @@
 ﻿# NoMercy MusicPlayer
 
-**NoMercy MusicPlayer** is a headless HTML5 audio player with a queue system and equalizer. </br>
-It is framework-agnostic and can be used with any JavaScript framework.
+**NoMercy AudioPlayer** is a lightweight,  customizable HTML5 audio player built with JavaScript. </br>
+It is designed to support a variety of media formats and streaming protocols with a queue system. </br>
+It is framework-agnostic and can be used with any JavaScript framework. </br>
+Always feel like fighting player UI choices? This player has no UI components, you can build your own!
 
 ## Features
 
-- **HTML5 Audio Support**: Compatible with popular media formats (MP3, FLAC, OGG).
+- **HTML5 Audio Support**: Compatible with popular media formats (MP3, FLAC, M4A).
+- **Streaming Support**: Handles streaming with HLS provided by [hls.js](https://github.com/video-dev/hls.js)
 - **Framework Agnostic**: Works with any JavaScript framework.
 - **No Ui**: No UI components, you can build your own.
 - **Event-Driven**: Full event-driven API.
-- **Queue system**: Add songs to a queue and play them in order, or shuffle them.
-- **Equalizer**: Built-in equalizer.
-- **Spectrum Analyzer**: Built-in spectrum analyzer.
+- **Queue system**: Add songs to a queue, remove them, play them in order or shuffle them.
+- **Equalizer**: Built-in equalizer with presets.
+- **Spectrum Analyzer**: Built-in spectrum analyzer provided by [audiomotion.dev](https://github.com/hvianna/audioMotion-analyzer).
 
 ## Installation
 ```sh
@@ -225,8 +228,12 @@ const handleClick = (e: MouseEvent) => {
 
 <template>
     <button aria-label="Toggle Playback" @click="handleClick($event)">
-        <MoooomIcon icon="nmPause" v-if="isPlaying" className="size-9" />
-        <MoooomIcon icon="nmPlay" v-else className="size-9" />
+        <svg v-if="isPlaying" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5"></path>
+        </svg>
+        <svg v-else fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"></path>
+        </svg>
     </button>
 </template>
 
