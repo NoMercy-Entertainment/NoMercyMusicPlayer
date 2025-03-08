@@ -11,7 +11,7 @@ export const equalizerSliderValues: EQSliderValues = {
 		min: -1,
 		max: 3,
 		step: 1,
-		default: 1,
+		default: 0,
 	},
 	band: {
 		min: -12,
