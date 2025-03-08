@@ -8,9 +8,9 @@ export const equalizerSliderValues: EQSliderValues = {
 		default: 0,
 	},
 	pre: {
-		min: 1,
+		min: -1,
 		max: 3,
-		step: 0.01,
+		step: 1,
 		default: 1,
 	},
 	band: {
