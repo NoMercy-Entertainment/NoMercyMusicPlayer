@@ -64,7 +64,6 @@ export class PlayerCore<S extends BasePlaylistItem> extends Queue<S> {
 	this.emit('stop');
 
 	this.setQueue([]);
-	this.dispose();
 
 	this.mediaSession?.setPlaybackState('none');
   }
@@ -141,7 +140,6 @@ export class PlayerCore<S extends BasePlaylistItem> extends Queue<S> {
 
 	this.on('pause', this.handlePause.bind(this));
 
-	// @ts-ignore
 	this.on('song', this.handleCurrentSongChange.bind(this));
 
 	this.on('time', this.handleTimeUpdate.bind(this));

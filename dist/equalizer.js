@@ -9,10 +9,10 @@ exports.equalizerSliderValues = {
         default: 0,
     },
     pre: {
-        min: 1,
+        min: -1,
         max: 3,
-        step: 0.01,
-        default: 1,
+        step: 1,
+        default: 0,
     },
     band: {
         min: -12,

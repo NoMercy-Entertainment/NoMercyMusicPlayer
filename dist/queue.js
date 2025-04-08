@@ -66,14 +66,15 @@ class Queue extends helpers_1.default {
         this.emit('song', payload);
         if (!payload)
             return;
-        this.getNewSource(payload).then((src) => {
+        this.getNewSource(payload)
+            .then((src) => {
             this._currentAudio.setSource(src);
-            setTimeout(() => {
-                this._currentAudio.play().then();
-            }, 150);
-            this._currentAudio
-                .getAudioElement()
-                .setAttribute('data-src', payload?.id?.toString());
+            this._currentAudio.play()
+                .then(() => {
+                this._currentAudio
+                    .getAudioElement()
+                    .setAttribute('data-src', payload?.id?.toString());
+            });
         });
     }
     next() {
@@ -113,21 +114,17 @@ class Queue extends helpers_1.default {
         }
     }
     playTrack(track, tracks) {
-        if (!this.currentSong?.id || this.currentSong?.id != track?.id) {
+        if (!this.currentSong?.id || this.currentSong?.id !== track?.id) {
             this.setCurrentSong(track);
         }
-        if (this._queue.length == 0 && tracks) {
-            const index = tracks.findIndex((t) => t.id == track.id);
-            const list = tracks.filter((t) => t.id != track.id);
-            const beforeIndex = [...list];
-            const afterIndex = list.splice(index, list.length - index);
-            this.setQueue([...afterIndex, ...beforeIndex]);
-        }
-        else if (this._queue.some((q) => q.id == track?.id)) {
-            this.addToQueue(track);
-        }
-        else {
-            this.addToQueueNext(track);
+        if (tracks) {
+            const index = tracks.findIndex((t) => t.id === track.id);
+            if (index !== -1) {
+                const afterIndex = tracks.slice(index + 1);
+                const beforeIndex = tracks.slice(0, index);
+                const uniqueQueue = [...afterIndex, ...beforeIndex];
+                this.setQueue(uniqueQueue);
+            }
         }
     }
     shuffle(value) {

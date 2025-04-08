@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const vue_1 = require("@ionic/vue");
+const hls_js_1 = __importDefault(require("hls.js"));
 const state_1 = require("./state");
 const spectrumAnalyzer_1 = require("./spectrumAnalyzer");
 class AudioNode {
@@ -49,8 +53,39 @@ class AudioNode {
         this._removeEvents();
         this._audioElement.remove();
     }
-    setSource(src) {
-        this._audioElement.src = src;
+    setAccessToken(accessToken) {
+        this.accessToken = accessToken;
+    }
+    setSource(url) {
+        this._audioElement.pause();
+        this._audioElement.removeAttribute('src');
+        if (!url.endsWith('.m3u8')) {
+            this.hls?.destroy();
+            this.hls = undefined;
+            this._audioElement.src = `${url}${this.accessToken ? `?token=${this.accessToken}` : ''}`;
+        }
+        else if (hls_js_1.default.isSupported()) {
+            this.hls ?? (this.hls = new hls_js_1.default({
+                debug: false,
+                enableWorker: true,
+                lowLatencyMode: true,
+                maxBufferHole: 0,
+                maxBufferLength: 30,
+                maxBufferSize: 0,
+                autoStartLoad: true,
+                testBandwidth: true,
+                xhrSetup: (xhr) => {
+                    if (this.accessToken) {
+                        xhr.setRequestHeader('authorization', `Bearer ${this.accessToken}`);
+                    }
+                },
+            }));
+            this.hls?.loadSource(url);
+            this.hls?.attachMedia(this._audioElement);
+        }
+        else if (this._audioElement.canPlayType('application/vnd.apple.mpegurl')) {
+            this._audioElement.src = `${url}${this.accessToken ? `?token=${this.accessToken}` : ''}`;
+        }
         return this;
     }
     play() {

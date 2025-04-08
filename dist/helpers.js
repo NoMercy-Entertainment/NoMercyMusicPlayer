@@ -123,6 +123,8 @@ class Helpers extends EventTarget {
     }
     setAccessToken(accessToken) {
         this.accessToken = accessToken;
+        this._audioElement1.setAccessToken(accessToken);
+        this._audioElement2.setAccessToken(accessToken);
     }
     setBaseUrl(baseUrl) {
         this.baseUrl = baseUrl;
@@ -131,7 +133,7 @@ class Helpers extends EventTarget {
         if (!newItem?.path)
             throw new Error('No path provided for new source');
         return new Promise((resolve) => {
-            return resolve(encodeURI(`${this.baseUrl}${newItem?.path}${this.accessToken ? `?token=${this.accessToken}` : ''}`).replace(/#/u, '%23'));
+            return resolve(encodeURI(`${this.baseUrl}${newItem?.path}`).replace(/#/u, '%23'));
         });
     }
     loadEqualizerSettings() {

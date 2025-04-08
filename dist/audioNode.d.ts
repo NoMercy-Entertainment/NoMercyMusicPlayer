@@ -1,9 +1,11 @@
 import Helpers from './helpers';
 import type { AudioOptions, EQBand, BasePlaylistItem } from './types';
+import HLS from 'hls.js';
 import { PlayerState } from "./state";
 import { AudioMotionAnalyzer, type ConstructorOptions } from "./spectrumAnalyzer";
 export default class AudioNode<S extends BasePlaylistItem> {
     _audioElement: HTMLAudioElement;
+    hls: HLS | undefined;
     state: PlayerState;
     duration: number;
     currentTime: number;
@@ -11,6 +13,7 @@ export default class AudioNode<S extends BasePlaylistItem> {
     isFading: boolean;
     context: AudioContext | null;
     motion: AudioMotionAnalyzer | null;
+    private accessToken?;
     protected options: AudioOptions;
     protected parent: Helpers<S>;
     protected motionConfig: ConstructorOptions;
@@ -29,7 +32,8 @@ export default class AudioNode<S extends BasePlaylistItem> {
     _panner: StereoPannerNode | null;
     constructor(options: AudioOptions, parent: Helpers<S>);
     dispose(): void;
-    setSource(src: string): this;
+    setAccessToken(accessToken: string): void;
+    setSource(url: string): AudioNode<S>;
     play(): Promise<void>;
     pause(): void;
     stop(): void;

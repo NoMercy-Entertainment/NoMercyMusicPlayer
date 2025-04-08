@@ -53,7 +53,6 @@ class PlayerCore extends queue_1.default {
         this.emit('song', null);
         this.emit('stop');
         this.setQueue([]);
-        this.dispose();
         this.mediaSession?.setPlaybackState('none');
     }
     setVolume(volume) {
@@ -158,7 +157,7 @@ class PlayerCore extends queue_1.default {
             title: `${this.currentSong?.name}`,
             artist: `${this.currentSong?.artist_track?.[0]?.name} ${feat}`,
             album: this.currentSong?.album_track?.[0]?.name ?? '',
-            artwork: this.currentSong?.cover ? `${this.baseUrl}/images/music${this.currentSong?.cover}` : undefined,
+            artwork: this.currentSong?.cover ? `${this.baseUrl}${this.currentSong?.cover}` : undefined,
         });
     }
     handleTimeUpdate(data) {
