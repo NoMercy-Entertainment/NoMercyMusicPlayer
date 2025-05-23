@@ -10,6 +10,8 @@ export interface PlayerOptions {
   motionColors?: string[];
   // Exposes the music player to the window object
   expose: boolean;
+  // Disables the queue automatically playing the next song
+  disableAutoPlayback?: boolean;
 }
 
 export interface AudioOptions {
@@ -20,6 +22,7 @@ export interface AudioOptions {
   bands: EQBand[];
   motionColors: string[];
   motionConfig: ConstructorOptions;
+  disableAutoPlayback: boolean
 }
 
 export interface TimeState {

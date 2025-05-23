@@ -30,6 +30,9 @@ export class PlayerCore<S extends BasePlaylistItem> extends Queue<S> {
 	if (config.siteTitle) {
 	  this.siteTitle = config.siteTitle;
 	}
+	if (config.disableAutoPlayback) {
+	  this.disableAutoPlayback = config.disableAutoPlayback;
+	}
   }
 
   public dispose(): void {

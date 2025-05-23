@@ -41,6 +41,7 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
   protected filters: BiquadFilterNode[] = [];
   protected panner: StereoPannerNode | null = null;
   protected siteTitle: string = 'NoMercy Player';
+  protected disableAutoPlayback = false;
 
   protected motionConfig: ConstructorOptions = {
 	alphaBars: true,
@@ -109,7 +110,8 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
 	  volume: this.volume / 100,
 	  bands: equalizerBands,
 	  motionConfig: this.motionConfig,
-	  motionColors: this.motionColors
+	  motionColors: this.motionColors,
+      disableAutoPlayback: this.disableAutoPlayback,
 	},
 	this
   );
@@ -119,7 +121,8 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
 	  volume: this.volume / 100,
 	  bands: equalizerBands,
 	  motionConfig: this.motionConfig,
-	  motionColors: this.motionColors
+	  motionColors: this.motionColors,
+      disableAutoPlayback: this.disableAutoPlayback,
 	},
 	this
   );
