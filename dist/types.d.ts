@@ -6,6 +6,7 @@ export interface PlayerOptions {
     motionConfig?: ConstructorOptions;
     motionColors?: string[];
     expose: boolean;
+    disableAutoPlayback?: boolean;
 }
 export interface AudioOptions {
     id: number;

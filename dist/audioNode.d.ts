@@ -1,6 +1,6 @@
-import Helpers from './helpers';
-import type { AudioOptions, EQBand, BasePlaylistItem } from './types';
-import HLS from 'hls.js';
+import Helpers from "./helpers";
+import type { AudioOptions, EQBand, BasePlaylistItem } from "./types";
+import HLS from "hls.js";
 import { PlayerState } from "./state";
 import { AudioMotionAnalyzer, type ConstructorOptions } from "./spectrumAnalyzer";
 export default class AudioNode<S extends BasePlaylistItem> {
@@ -24,7 +24,8 @@ export default class AudioNode<S extends BasePlaylistItem> {
     protected fadeOutVolume: number;
     protected fadeInVolume: number;
     protected hasNextQueued: boolean;
-    protected repeat: 'off' | 'one' | 'all';
+    protected repeat: "off" | "one" | "all";
+    _disableAutoPlayback: boolean;
     protected isTv: boolean;
     protected bands: EQBand[];
     _preGain: GainNode | null;
@@ -59,7 +60,7 @@ export default class AudioNode<S extends BasePlaylistItem> {
     setCrossFadeSteps(steps: number): void;
     _fadeIn(firstRun?: boolean): void;
     _fadeOut(firstRun?: boolean): void;
-    setRepeating(repeat: 'off' | 'one' | 'all'): void;
+    setRepeating(repeat: "off" | "one" | "all"): void;
     protected _initialize(): void;
     protected _createAudioElement(id: number): this;
     private playEvent;

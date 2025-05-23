@@ -37,6 +37,7 @@ class Helpers extends EventTarget {
         this.filters = [];
         this.panner = null;
         this.siteTitle = 'NoMercy Player';
+        this.disableAutoPlayback = false;
         this.motionConfig = {
             alphaBars: true,
             ansiBands: true,
@@ -98,14 +99,14 @@ class Helpers extends EventTarget {
             volume: this.volume / 100,
             bands: equalizer_1.equalizerBands,
             motionConfig: this.motionConfig,
-            motionColors: this.motionColors
+            motionColors: this.motionColors,
         }, this);
         this._audioElement2 = new audioNode_1.default({
             id: 2,
             volume: this.volume / 100,
             bands: equalizer_1.equalizerBands,
             motionConfig: this.motionConfig,
-            motionColors: this.motionColors
+            motionColors: this.motionColors,
         }, this);
         this._currentAudio = this._audioElement1;
         this._nextAudio = this._audioElement2;
@@ -116,10 +117,12 @@ class Helpers extends EventTarget {
         this._audioElement1._preGain = this.preGain;
         this._audioElement1._filters = this.filters;
         this._audioElement1._panner = this.panner;
+        this._audioElement1._disableAutoPlayback = this.disableAutoPlayback;
         this._audioElement2.context = this.context;
         this._audioElement2._preGain = this.preGain;
         this._audioElement2._filters = this.filters;
         this._audioElement2._panner = this.panner;
+        this._audioElement2._disableAutoPlayback = this.disableAutoPlayback;
     }
     setAccessToken(accessToken) {
         this.accessToken = accessToken;

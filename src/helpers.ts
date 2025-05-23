@@ -41,7 +41,7 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
   protected filters: BiquadFilterNode[] = [];
   protected panner: StereoPannerNode | null = null;
   protected siteTitle: string = 'NoMercy Player';
-  protected disableAutoPlayback = false;
+  protected disableAutoPlayback: boolean = false;
 
   protected motionConfig: ConstructorOptions = {
 	alphaBars: true,
@@ -111,7 +111,6 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
 	  bands: equalizerBands,
 	  motionConfig: this.motionConfig,
 	  motionColors: this.motionColors,
-      disableAutoPlayback: this.disableAutoPlayback,
 	},
 	this
   );
@@ -122,7 +121,6 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
 	  bands: equalizerBands,
 	  motionConfig: this.motionConfig,
 	  motionColors: this.motionColors,
-      disableAutoPlayback: this.disableAutoPlayback,
 	},
 	this
   );
@@ -140,11 +138,13 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
 	this._audioElement1._preGain = this.preGain;
 	this._audioElement1._filters = this.filters;
 	this._audioElement1._panner = this.panner;
+    this._audioElement1._disableAutoPlayback = this.disableAutoPlayback;
 
 	this._audioElement2.context = this.context;
 	this._audioElement2._preGain = this.preGain;
 	this._audioElement2._filters = this.filters;
 	this._audioElement2._panner = this.panner;
+    this._audioElement2._disableAutoPlayback = this.disableAutoPlayback;
   }
 
   public setAccessToken(accessToken: string): void {

@@ -19,13 +19,13 @@ class AudioNode {
         this.motion = null;
         this.options = {};
         this.motionColors = [
-            '#ff0000',
-            '#ffff00',
-            '#00ff00',
-            '#00ffff',
-            '#0000ff',
-            '#ff00ff',
-            '#ff0000',
+            "#ff0000",
+            "#ffff00",
+            "#00ff00",
+            "#00ffff",
+            "#0000ff",
+            "#ff00ff",
+            "#ff0000",
         ];
         this.fadeDuration = 3;
         this.prefetchLeeway = 10;
@@ -33,9 +33,11 @@ class AudioNode {
         this.fadeOutVolume = 0;
         this.fadeInVolume = 100;
         this.hasNextQueued = false;
-        this.repeat = 'off';
+        this.repeat = "off";
+        this._disableAutoPlayback = false;
         // Android TV
-        this.isTv = window.matchMedia('(width: 960px) and (height: 540px)').matches;
+        this.isTv = window.matchMedia("(width: 960px) and (height: 540px)")
+            .matches;
         this.bands = [];
         this._preGain = null;
         this._filters = [];
@@ -58,11 +60,11 @@ class AudioNode {
     }
     setSource(url) {
         this._audioElement.pause();
-        this._audioElement.removeAttribute('src');
-        if (!url.endsWith('.m3u8')) {
+        this._audioElement.removeAttribute("src");
+        if (!url.endsWith(".m3u8")) {
             this.hls?.destroy();
             this.hls = undefined;
-            this._audioElement.src = `${url}${this.accessToken ? `?token=${this.accessToken}` : ''}`;
+            this._audioElement.src = `${url}${this.accessToken ? `?token=${this.accessToken}` : ""}`;
         }
         else if (hls_js_1.default.isSupported()) {
             this.hls ?? (this.hls = new hls_js_1.default({
@@ -76,15 +78,15 @@ class AudioNode {
                 testBandwidth: true,
                 xhrSetup: (xhr) => {
                     if (this.accessToken) {
-                        xhr.setRequestHeader('authorization', `Bearer ${this.accessToken}`);
+                        xhr.setRequestHeader("authorization", `Bearer ${this.accessToken}`);
                     }
                 },
             }));
             this.hls?.loadSource(url);
             this.hls?.attachMedia(this._audioElement);
         }
-        else if (this._audioElement.canPlayType('application/vnd.apple.mpegurl')) {
-            this._audioElement.src = `${url}${this.accessToken ? `?token=${this.accessToken}` : ''}`;
+        else if (this._audioElement.canPlayType("application/vnd.apple.mpegurl")) {
+            this._audioElement.src = `${url}${this.accessToken ? `?token=${this.accessToken}` : ""}`;
         }
         return this;
     }
@@ -98,11 +100,11 @@ class AudioNode {
         this._audioElement.pause();
         this._audioElement.currentTime = 0;
         URL.revokeObjectURL(this._audioElement.src);
-        this._audioElement.removeAttribute('src');
-        this._audioElement.removeAttribute('data-src');
+        this._audioElement.removeAttribute("src");
+        this._audioElement.removeAttribute("data-src");
     }
     setVolume(volume) {
-        const isMobileDevice = (0, vue_1.isPlatform)('android') || (0, vue_1.isPlatform)('ios');
+        const isMobileDevice = (0, vue_1.isPlatform)("android") || (0, vue_1.isPlatform)("ios");
         if (isMobileDevice) {
             this._audioElement.volume = 1;
             return;
@@ -158,12 +160,9 @@ class AudioNode {
             duration: Math.abs(this.getDuration()),
             remaining: this.getDuration() < 0
                 ? Infinity
-                : Math.abs(this.getDuration()) -
-                    Math.abs(this.getCurrentTime()),
+                : Math.abs(this.getDuration()) - Math.abs(this.getCurrentTime()),
             buffered: this.getBuffer(),
-            percentage: (Math.abs(this.getCurrentTime()) /
-                Math.abs(this.getDuration())) *
-                100,
+            percentage: (Math.abs(this.getCurrentTime()) / Math.abs(this.getDuration())) * 100,
         };
     }
     setCrossFadeSteps(steps) {
@@ -188,7 +187,7 @@ class AudioNode {
         }
         this.fadeVolume(this.fadeInVolume);
         if (this.fadeInVolume >= this.volume - this.crossFadeSteps * 12) {
-            this.parent.emit('nextSong');
+            this.parent.emit("nextSong");
         }
     }
     _fadeOut(firstRun = false) {
@@ -210,13 +209,13 @@ class AudioNode {
         if (this.fadeOutVolume == 0) {
             this.pause();
             URL.revokeObjectURL(this._audioElement?.src);
-            this._audioElement?.removeAttribute('src');
-            this._audioElement?.removeAttribute('data-src');
-            this.parent.emit('endFadeOut');
+            this._audioElement?.removeAttribute("src");
+            this._audioElement?.removeAttribute("data-src");
+            this.parent.emit("endFadeOut");
             setTimeout(() => {
                 this.hasNextQueued = false;
                 this.isFading = false;
-                this.parent.emit('setCurrentAudio', this._audioElement);
+                this.parent.emit("setCurrentAudio", this._audioElement);
             }, 500);
         }
     }
@@ -228,94 +227,96 @@ class AudioNode {
         this._addEvents();
     }
     _createAudioElement(id) {
-        this._audioElement = document.createElement('audio');
+        this._audioElement = document.createElement("audio");
         this._audioElement.id = `audio-${id}`;
-        this._audioElement.preload = 'auto';
+        this._audioElement.preload = "auto";
         this._audioElement.controls = false;
         this._audioElement.autoplay = true;
         this._audioElement.loop = false;
-        this._audioElement.setAttribute('tabindex', '-1');
+        this._audioElement.setAttribute("tabindex", "-1");
         this._audioElement.volume = this.options.volume ?? 1;
         // this._audioElement.style.display = 'none';
-        this._audioElement.crossOrigin = 'anonymous';
+        this._audioElement.crossOrigin = "anonymous";
         document.body.appendChild(this._audioElement);
         return this;
     }
     playEvent() {
         this.state = state_1.PlayerState.PLAYING;
-        this.parent.emit('play-internal', this._audioElement);
+        this.parent.emit("play-internal", this._audioElement);
         this._initializeContext();
         if (!this.isFading) {
-            this.parent.emit('play', this._audioElement);
+            this.parent.emit("play", this._audioElement);
         }
     }
     pauseEvent() {
         this.state = state_1.PlayerState.PAUSED;
-        this.parent.emit('pause-internal', this._audioElement);
+        this.parent.emit("pause-internal", this._audioElement);
         if (!this.isFading) {
-            this.parent.emit('pause', this._audioElement);
+            this.parent.emit("pause", this._audioElement);
         }
     }
     endedEvent() {
         this.state = state_1.PlayerState.ENDED;
-        this.parent.emit('ended', this._audioElement);
+        this.parent.emit("ended", this._audioElement);
     }
     errorEvent() {
-        console.error('Error', this._audioElement.error);
+        console.error("Error", this._audioElement.error);
         this.state = state_1.PlayerState.ERROR;
-        this.parent.emit('error', this._audioElement);
+        this.parent.emit("error", this._audioElement);
     }
     waitingEvent() {
         this.state = state_1.PlayerState.BUFFERING;
-        this.parent.emit('waiting', this._audioElement);
+        this.parent.emit("waiting", this._audioElement);
     }
     canplayEvent() {
-        this.parent.emit('canplay', this._audioElement);
+        this.parent.emit("canplay", this._audioElement);
         if (this.isPlaying())
             return;
         this.state = state_1.PlayerState.IDLE;
     }
     loadedmetadataEvent() {
-        this.parent.emit('loadedmetadata', this._audioElement);
+        this.parent.emit("loadedmetadata", this._audioElement);
         if (this.isPlaying())
             return;
         this.state = state_1.PlayerState.IDLE;
     }
     loadstartEvent() {
         this.state = state_1.PlayerState.LOADING;
-        this.parent.emit('loadstart', this._audioElement);
+        this.parent.emit("loadstart", this._audioElement);
     }
     timeupdateEvent() {
         this.state = state_1.PlayerState.PLAYING;
         this.currentTime = this._audioElement.currentTime;
         this.duration = this._audioElement.duration;
-        this.parent.emit('time-internal', this.getTimeData());
-        if (!this.isFading || this.repeat == 'one') {
-            this.parent.emit('time', this.getTimeData());
+        this.parent.emit("time-internal", this.getTimeData());
+        if (!this.isFading || this.repeat == "one") {
+            this.parent.emit("time", this.getTimeData());
         }
         if (!this.hasNextQueued &&
-            this.repeat !== 'one' &&
+            this.repeat !== "one" &&
             this._audioElement.currentTime >=
-                this._audioElement.duration - this.prefetchLeeway) {
+                this._audioElement.duration - this.prefetchLeeway &&
+            !this._disableAutoPlayback) {
             this.hasNextQueued = true;
-            this.parent.emit('queueNext');
+            this.parent.emit("queueNext");
         }
-        if (this.repeat !== 'one' &&
+        if (this.repeat !== "one" &&
             this._audioElement.currentTime >=
-                this._audioElement.duration - (this.fadeDuration * 4)) {
-            this.parent.emit('startFadeOut');
+                this._audioElement.duration - this.fadeDuration * 4 &&
+            !this._disableAutoPlayback) {
+            this.parent.emit("startFadeOut");
         }
     }
     durationchangeEvent() {
         this.duration = this._audioElement.duration;
-        this.parent.emit('duration', this._audioElement.duration);
+        this.parent.emit("duration", this._audioElement.duration);
     }
     volumechangeEvent() {
-        this.parent.emit('volume', this.volume);
+        this.parent.emit("volume", this.volume);
     }
     seekedEvent() {
-        console.log('seeked', this._audioElement.currentTime);
-        this.parent.emit('seeked', {
+        console.log("seeked", this._audioElement.currentTime);
+        this.parent.emit("seeked", {
             buffered: this._audioElement.buffered.length,
             duration: this._audioElement.duration,
             percentage: (this._audioElement.currentTime / this._audioElement.duration) * 100,
@@ -324,32 +325,32 @@ class AudioNode {
         });
     }
     _addEvents() {
-        this._audioElement.addEventListener('play', this.playEvent.bind(this));
-        this._audioElement.addEventListener('pause', this.pauseEvent.bind(this));
-        this._audioElement.addEventListener('ended', this.endedEvent.bind(this));
-        this._audioElement.addEventListener('error', this.errorEvent.bind(this));
-        this._audioElement.addEventListener('waiting', this.waitingEvent.bind(this));
-        this._audioElement.addEventListener('canplay', this.canplayEvent.bind(this));
-        this._audioElement.addEventListener('loadedmetadata', this.loadedmetadataEvent.bind(this));
-        this._audioElement.addEventListener('loadstart', this.loadstartEvent.bind(this));
-        this._audioElement.addEventListener('timeupdate', this.timeupdateEvent.bind(this));
-        this._audioElement.addEventListener('durationchange', this.durationchangeEvent.bind(this));
-        this._audioElement.addEventListener('volumechange', this.volumechangeEvent.bind(this));
-        this._audioElement.addEventListener('seeked', this.seekedEvent.bind(this));
+        this._audioElement.addEventListener("play", this.playEvent.bind(this));
+        this._audioElement.addEventListener("pause", this.pauseEvent.bind(this));
+        this._audioElement.addEventListener("ended", this.endedEvent.bind(this));
+        this._audioElement.addEventListener("error", this.errorEvent.bind(this));
+        this._audioElement.addEventListener("waiting", this.waitingEvent.bind(this));
+        this._audioElement.addEventListener("canplay", this.canplayEvent.bind(this));
+        this._audioElement.addEventListener("loadedmetadata", this.loadedmetadataEvent.bind(this));
+        this._audioElement.addEventListener("loadstart", this.loadstartEvent.bind(this));
+        this._audioElement.addEventListener("timeupdate", this.timeupdateEvent.bind(this));
+        this._audioElement.addEventListener("durationchange", this.durationchangeEvent.bind(this));
+        this._audioElement.addEventListener("volumechange", this.volumechangeEvent.bind(this));
+        this._audioElement.addEventListener("seeked", this.seekedEvent.bind(this));
     }
     _removeEvents() {
-        this._audioElement.removeEventListener('play', this.playEvent.bind(this));
-        this._audioElement.removeEventListener('pause', this.pauseEvent.bind(this));
-        this._audioElement.removeEventListener('ended', this.endedEvent.bind(this));
-        this._audioElement.removeEventListener('error', this.errorEvent.bind(this));
-        this._audioElement.removeEventListener('waiting', this.waitingEvent.bind(this));
-        this._audioElement.removeEventListener('canplay', this.canplayEvent.bind(this));
-        this._audioElement.removeEventListener('loadedmetadata', this.loadedmetadataEvent.bind(this));
-        this._audioElement.removeEventListener('loadstart', this.loadstartEvent.bind(this));
-        this._audioElement.removeEventListener('timeupdate', this.timeupdateEvent.bind(this));
-        this._audioElement.removeEventListener('durationchange', this.durationchangeEvent.bind(this));
-        this._audioElement.removeEventListener('volumechange', this.volumechangeEvent.bind(this));
-        this._audioElement.removeEventListener('seeked', this.seekedEvent.bind(this));
+        this._audioElement.removeEventListener("play", this.playEvent.bind(this));
+        this._audioElement.removeEventListener("pause", this.pauseEvent.bind(this));
+        this._audioElement.removeEventListener("ended", this.endedEvent.bind(this));
+        this._audioElement.removeEventListener("error", this.errorEvent.bind(this));
+        this._audioElement.removeEventListener("waiting", this.waitingEvent.bind(this));
+        this._audioElement.removeEventListener("canplay", this.canplayEvent.bind(this));
+        this._audioElement.removeEventListener("loadedmetadata", this.loadedmetadataEvent.bind(this));
+        this._audioElement.removeEventListener("loadstart", this.loadstartEvent.bind(this));
+        this._audioElement.removeEventListener("timeupdate", this.timeupdateEvent.bind(this));
+        this._audioElement.removeEventListener("durationchange", this.durationchangeEvent.bind(this));
+        this._audioElement.removeEventListener("volumechange", this.volumechangeEvent.bind(this));
+        this._audioElement.removeEventListener("seeked", this.seekedEvent.bind(this));
     }
     createFilter(frequency, type) {
         const filter = this.context.createBiquadFilter();
@@ -360,37 +361,38 @@ class AudioNode {
     }
     _initializeContext() {
         // Performance on Android TV is insufficient and causes the playback to stutter
-        if (this.isTv || localStorage.getItem('nmplayer-music-supports-audio-context') === 'false')
+        if (this.isTv ||
+            localStorage.getItem("nmplayer-music-supports-audio-context") === "false")
             return;
         if (!this.context) {
             try {
                 this.motion = (0, spectrumAnalyzer_1.spectrumAnalyser)(this._audioElement, this.motionConfig);
                 if (this.motionColors.length) {
-                    this.motion.registerGradient('theme', {
-                        bgColor: 'transparent',
-                        dir: 'h',
-                        colorStops: this.motionColors
+                    this.motion.registerGradient("theme", {
+                        bgColor: "transparent",
+                        dir: "h",
+                        colorStops: this.motionColors,
                     });
-                    this.motion.gradient = 'theme';
+                    this.motion.gradient = "theme";
                 }
                 setTimeout(() => {
-                    this.motion.canvas.style.position = 'absolute';
-                    this.motion.canvas.style.height = '320px';
-                    this.motion.canvas.style.width = '1400px';
-                    this.motion.canvas.style.overflow = 'hidden';
-                    this.motion.canvas.style.opacity = '0';
-                    this.motion.canvas.style.pointerEvents = 'none';
+                    this.motion.canvas.style.position = "absolute";
+                    this.motion.canvas.style.height = "320px";
+                    this.motion.canvas.style.width = "1400px";
+                    this.motion.canvas.style.overflow = "hidden";
+                    this.motion.canvas.style.opacity = "0";
+                    this.motion.canvas.style.pointerEvents = "none";
                 }, 500);
                 this.context = this.motion.audioCtx;
-                this.context.addEventListener('error', () => {
-                    localStorage.setItem('nmplayer-music-supports-audio-context', 'false');
+                this.context.addEventListener("error", () => {
+                    localStorage.setItem("nmplayer-music-supports-audio-context", "false");
                     this.context.close().then();
                     location.reload();
                 });
                 this._preGain = this.context.createGain();
                 this._filters = this.bands
                     .slice(1) // Skip the first band (it's the pre-gain)
-                    .map(band => this.createFilter(band.frequency, 'peaking'));
+                    .map((band) => this.createFilter(band.frequency, "peaking"));
                 this._panner = this.context.createStereoPanner();
                 const track1 = this.motion.connectedSources.at(0);
                 track1.connect(this._preGain);
@@ -401,28 +403,31 @@ class AudioNode {
                 }, this._preGain)
                     .connect(this._panner)
                     .connect(this.context.destination);
-                this.parent.on('setPreGain', (gain) => {
+                this.parent.on("setPreGain", (gain) => {
                     this._preGain.gain.value = gain;
                 });
-                this.parent.on('setPanner', (pan) => {
+                this.parent.on("setPanner", (pan) => {
                     this._panner.pan.value = pan;
                 });
-                this.parent.on('setFilter', (band) => {
-                    const index = this.bands.findIndex(b => b.frequency === band.frequency);
+                this.parent.on("setFilter", (band) => {
+                    const index = this.bands.findIndex((b) => b.frequency === band.frequency);
                     this._filters[index - 1].gain.value = band.gain;
                 });
                 this.parent.loadEqualizerSettings();
             }
             catch (e) {
-                console.error('Failed to create AudioContext:', e);
+                console.error("Failed to create AudioContext:", e);
                 return;
             }
         }
-        if (this.context && this.context.state === 'suspended') {
-            this.context.resume().then(() => {
-                console.log('AudioContext resumed');
-            }).catch(e => {
-                console.error('Failed to resume AudioContext:', e);
+        if (this.context && this.context.state === "suspended") {
+            this.context
+                .resume()
+                .then(() => {
+                console.log("AudioContext resumed");
+            })
+                .catch((e) => {
+                console.error("Failed to resume AudioContext:", e);
             });
         }
     }

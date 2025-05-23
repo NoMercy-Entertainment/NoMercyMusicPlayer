@@ -22,7 +22,6 @@ export interface AudioOptions {
   bands: EQBand[];
   motionColors: string[];
   motionConfig: ConstructorOptions;
-  disableAutoPlayback: boolean
 }
 
 export interface TimeState {

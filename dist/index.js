@@ -26,6 +26,9 @@ class PlayerCore extends queue_1.default {
         if (config.siteTitle) {
             this.siteTitle = config.siteTitle;
         }
+        if (config.disableAutoPlayback !== undefined) {
+            this.disableAutoPlayback = config.disableAutoPlayback;
+        }
     }
     dispose() {
         this._audioElement1.dispose();
@@ -110,7 +113,6 @@ class PlayerCore extends queue_1.default {
         this.on('ready', this.handleReady.bind(this));
         this.on('play', this.handlePlay.bind(this));
         this.on('pause', this.handlePause.bind(this));
-        // @ts-ignore
         this.on('song', this.handleCurrentSongChange.bind(this));
         this.on('time', this.handleTimeUpdate.bind(this));
         this.on('error', this.handleError.bind(this));

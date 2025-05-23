@@ -175,6 +175,7 @@ export default class Queue<S extends BasePlaylistItem> extends Helpers<S> {
     protected _initializeQueue(): void {
 
         this.on('ended', () => {
+            if (this.disableAutoPlayback) return;
             if (this._repeat === 'one') {
                 this._currentAudio.setCurrentTime(0);
                 setTimeout(() => {
@@ -184,6 +185,7 @@ export default class Queue<S extends BasePlaylistItem> extends Helpers<S> {
         });
 
         this.on('queueNext', () => {
+            if (this.disableAutoPlayback) return;
             if (this._repeat === 'one') return;
 
             if (this._repeat === 'all' && this._queue.length === 0) {
@@ -247,6 +249,7 @@ export default class Queue<S extends BasePlaylistItem> extends Helpers<S> {
         });
 
         this.on('ended', (el) => {
+            if (this.disableAutoPlayback) return;
             if (el == this._currentAudio.getAudioElement()) {
                 this.currentSong = null;
             }

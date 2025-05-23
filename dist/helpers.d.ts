@@ -30,6 +30,7 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
     protected filters: BiquadFilterNode[];
     protected panner: StereoPannerNode | null;
     protected siteTitle: string;
+    protected disableAutoPlayback: boolean;
     protected motionConfig: ConstructorOptions;
     protected motionColors: string[];
     equalizerPanning: number;
