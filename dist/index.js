@@ -108,6 +108,11 @@ class PlayerCore extends queue_1.default {
     getTimeData() {
         return this._currentAudio.getTimeData();
     }
+    setAutoPlayback(value) {
+        this.disableAutoPlayback = value;
+        this._audioElement1.setAutoPlayback(value);
+        this._audioElement2.setAutoPlayback(value);
+    }
     _initializeCore() {
         this.mediaSession?.setPlaybackState('none');
         this.on('ready', this.handleReady.bind(this));

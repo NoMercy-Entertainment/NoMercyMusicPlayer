@@ -134,6 +134,12 @@ export class PlayerCore<S extends BasePlaylistItem> extends Queue<S> {
 	return this._currentAudio.getTimeData();
   }
 
+  public setAutoPlayback(value: boolean): void {
+	this.disableAutoPlayback = value;
+	this._audioElement1.setAutoPlayback(value);
+	this._audioElement2.setAutoPlayback(value);
+  }
+
   protected _initializeCore(): void {
 	this.mediaSession?.setPlaybackState('none');
 

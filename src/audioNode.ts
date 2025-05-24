@@ -215,6 +215,10 @@ export default class AudioNode<S extends BasePlaylistItem> {
     this.crossFadeSteps = steps;
   }
 
+  public setAutoPlayback(value: boolean): void {
+    this._disableAutoPlayback = value;
+  }
+
   public _fadeIn(firstRun: boolean = false) {
     if (firstRun) {
       this.fadeVolume(0);

@@ -168,6 +168,9 @@ class AudioNode {
     setCrossFadeSteps(steps) {
         this.crossFadeSteps = steps;
     }
+    setAutoPlayback(value) {
+        this._disableAutoPlayback = value;
+    }
     _fadeIn(firstRun = false) {
         if (firstRun) {
             this.fadeVolume(0);

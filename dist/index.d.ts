@@ -19,6 +19,7 @@ export declare class PlayerCore<S extends BasePlaylistItem> extends Queue<S> {
     getCurrentTime(): number;
     getBuffer(): number;
     getTimeData(): TimeState;
+    setAutoPlayback(value: boolean): void;
     protected _initializeCore(): void;
     private handleReady;
     private handlePlay;

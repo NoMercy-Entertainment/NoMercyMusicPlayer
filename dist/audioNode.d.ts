@@ -58,6 +58,7 @@ export default class AudioNode<S extends BasePlaylistItem> {
         percentage: number;
     };
     setCrossFadeSteps(steps: number): void;
+    setAutoPlayback(value: boolean): void;
     _fadeIn(firstRun?: boolean): void;
     _fadeOut(firstRun?: boolean): void;
     setRepeating(repeat: "off" | "one" | "all"): void;
