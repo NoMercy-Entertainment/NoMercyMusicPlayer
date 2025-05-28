@@ -3,6 +3,14 @@ import Queue from './queue';
 import { PlayerOptions, type BasePlaylistItem, TimeState } from './types';
 export declare class PlayerCore<S extends BasePlaylistItem> extends Queue<S> {
     mediaSession: MediaSession;
+    actions?: {
+        play?: MediaSessionActionHandler;
+        pause?: MediaSessionActionHandler;
+        stop?: MediaSessionActionHandler;
+        previous?: MediaSessionActionHandler;
+        next?: MediaSessionActionHandler;
+        seek?: (number: number) => void;
+    };
     constructor(config: PlayerOptions);
     dispose(): void;
     play(): Promise<void>;

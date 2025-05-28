@@ -29,11 +29,12 @@ class PlayerCore extends queue_1.default {
         if (config.disableAutoPlayback !== undefined) {
             this.disableAutoPlayback = config.disableAutoPlayback;
         }
+        this.actions = config.actions;
     }
     dispose() {
         this._audioElement1.dispose();
         this._audioElement2.dispose();
-        this.mediaSession?.setPlaybackState('none');
+        this.mediaSession?.setPlaybackState("none");
     }
     play() {
         return this._currentAudio.play();
@@ -53,16 +54,16 @@ class PlayerCore extends queue_1.default {
         this._currentAudio.stop();
         this.currentSong = null;
         this.state = state_1.PlayerState.STOPPED;
-        this.emit('song', null);
-        this.emit('stop');
+        this.emit("song", null);
+        this.emit("stop");
         this.setQueue([]);
-        this.mediaSession?.setPlaybackState('none');
+        this.mediaSession?.setPlaybackState("none");
     }
     setVolume(volume) {
         const newVolume = Math.floor(volume);
         this._currentAudio.setVolume(newVolume);
         this._nextAudio.setVolume(newVolume);
-        localStorage.setItem('nmplayer-music-volume', newVolume.toString());
+        localStorage.setItem("nmplayer-music-volume", newVolume.toString());
     }
     getVolume() {
         return this._currentAudio.getVolume();
@@ -72,16 +73,16 @@ class PlayerCore extends queue_1.default {
         this._nextAudio.mute();
         this.volumeState = state_1.VolumeState.MUTED;
         this.isMuted = true;
-        this.emit('mute', true);
-        localStorage.setItem('nmplayer-music-muted', 'true');
+        this.emit("mute", true);
+        localStorage.setItem("nmplayer-music-muted", "true");
     }
     unmute() {
         this._currentAudio.unmute();
         this._nextAudio.unmute();
         this.volumeState = state_1.VolumeState.UNMUTED;
         this.isMuted = false;
-        this.emit('mute', false);
-        localStorage.setItem('nmplayer-music-muted', 'false');
+        this.emit("mute", false);
+        localStorage.setItem("nmplayer-music-muted", "false");
     }
     toggleMute() {
         if (this.volumeState === state_1.VolumeState.MUTED) {
@@ -114,65 +115,67 @@ class PlayerCore extends queue_1.default {
         this._audioElement2.setAutoPlayback(value);
     }
     _initializeCore() {
-        this.mediaSession?.setPlaybackState('none');
-        this.on('ready', this.handleReady.bind(this));
-        this.on('play', this.handlePlay.bind(this));
-        this.on('pause', this.handlePause.bind(this));
-        this.on('song', this.handleCurrentSongChange.bind(this));
-        this.on('time', this.handleTimeUpdate.bind(this));
-        this.on('error', this.handleError.bind(this));
-        this.setVolume(parseInt(localStorage.getItem('nmplayer-music-volume') ?? '100', 10));
+        this.mediaSession?.setPlaybackState("none");
+        this.on("ready", this.handleReady.bind(this));
+        this.on("play", this.handlePlay.bind(this));
+        this.on("pause", this.handlePause.bind(this));
+        this.on("song", this.handleCurrentSongChange.bind(this));
+        this.on("time", this.handleTimeUpdate.bind(this));
+        this.on("error", this.handleError.bind(this));
+        this.setVolume(parseInt(localStorage.getItem("nmplayer-music-volume") ?? "100", 10));
         setTimeout(() => {
-            this.emit('ready');
+            this.emit("ready");
         }, 1500);
     }
     handleReady() {
         this.mediaSession?.setActionHandler({
-            play: this.play.bind(this),
-            pause: this.pause.bind(this),
-            stop: this.stop.bind(this),
-            previous: this.previous.bind(this),
-            next: this.next.bind(this),
-            seek: this.seek.bind(this),
+            play: this.actions?.play?.bind(this) ?? this.play.bind(this),
+            pause: this.actions?.pause?.bind(this) ?? this.pause.bind(this),
+            stop: this.actions?.stop?.bind(this) ?? this.stop.bind(this),
+            previous: this.actions?.previous?.bind(this) ?? this.previous.bind(this),
+            next: this.actions?.next?.bind(this) ?? this.next.bind(this),
+            seek: this.actions?.seek?.bind(this) ?? this.seek.bind(this),
             getPosition: this.getCurrentTime.bind(this),
         });
     }
     handlePlay() {
         this.isPlaying = true;
         this.state = state_1.PlayerState.PLAYING;
-        this.mediaSession?.setPlaybackState('playing');
+        this.mediaSession?.setPlaybackState("playing");
     }
     handlePause() {
         this.isPlaying = false;
         this.state = state_1.PlayerState.PAUSED;
-        this.mediaSession?.setPlaybackState('paused');
+        this.mediaSession?.setPlaybackState("paused");
     }
     handleCurrentSongChange(value) {
         if (!value) {
             this.currentSong = null;
-            this.mediaSession?.setPlaybackState('none');
+            this.mediaSession?.setPlaybackState("none");
             return;
         }
         const feat = this.currentSong?.artist_track
             ?.slice(1)
             ?.map((a) => ` Ft. ${a.name}`)
-            .join('');
-        if (window.location.hash.includes('music')) {
+            .join("");
+        if (window.location.hash.includes("music")) {
             this.setTitle(`${this.currentSong?.artist_track?.[0]?.name} - ${this.currentSong?.name} ${feat}`);
         }
         this.mediaSession?.setMetadata({
             title: `${this.currentSong?.name}`,
             artist: `${this.currentSong?.artist_track?.[0]?.name} ${feat}`,
-            album: this.currentSong?.album_track?.[0]?.name ?? '',
-            artwork: this.currentSong?.cover ? `${this.baseUrl}${this.currentSong?.cover}` : undefined,
+            album: this.currentSong?.album_track?.[0]?.name ?? "",
+            artwork: this.currentSong?.cover
+                ? `${this.baseUrl}${this.currentSong?.cover}`
+                : undefined,
         });
     }
     handleTimeUpdate(data) {
         const feat = this.currentSong?.artist_track
             ?.slice(1)
             ?.map((a) => ` Ft. ${a.name}`)
-            .join('');
-        if (window.location.hash.includes('music')) {
+            .join("");
+        if (window.location.hash.includes("music")) {
             this.setTitle(`${this.currentSong?.artist_track?.[0]?.name} - ${this.currentSong?.name} ${feat}`);
         }
         if (!data.duration)
@@ -186,7 +189,7 @@ class PlayerCore extends queue_1.default {
     handleError() {
         this.state = state_1.PlayerState.ERROR;
         this.isPlaying = false;
-        this.mediaSession?.setPlaybackState('none');
+        this.mediaSession?.setPlaybackState("none");
     }
 }
 exports.PlayerCore = PlayerCore;

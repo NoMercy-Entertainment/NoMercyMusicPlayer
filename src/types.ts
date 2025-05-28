@@ -12,6 +12,14 @@ export interface PlayerOptions {
   expose: boolean;
   // Disables the queue automatically playing the next song
   disableAutoPlayback?: boolean;
+  actions?: {
+    play?: MediaSessionActionHandler;
+    pause?: MediaSessionActionHandler;
+    stop?: MediaSessionActionHandler;
+    previous?: MediaSessionActionHandler;
+    next?: MediaSessionActionHandler;
+    seek?: (number: number) => void;
+  };
 }
 
 export interface AudioOptions {

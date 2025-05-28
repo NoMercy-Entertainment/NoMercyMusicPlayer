@@ -7,6 +7,14 @@ export interface PlayerOptions {
     motionColors?: string[];
     expose: boolean;
     disableAutoPlayback?: boolean;
+    actions?: {
+        play?: MediaSessionActionHandler;
+        pause?: MediaSessionActionHandler;
+        stop?: MediaSessionActionHandler;
+        previous?: MediaSessionActionHandler;
+        next?: MediaSessionActionHandler;
+        seek?: (number: number) => void;
+    };
 }
 export interface AudioOptions {
     id: number;
