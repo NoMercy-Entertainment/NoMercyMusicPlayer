@@ -94,6 +94,8 @@ class Helpers extends EventTarget {
         };
         this.motionColors = [];
         this.equalizerPanning = 0;
+        this.eventTarget = {};
+        this.events = [];
         this._audioElement1 = new audioNode_1.default({
             id: 1,
             volume: this.volume / 100,
@@ -110,6 +112,7 @@ class Helpers extends EventTarget {
         }, this);
         this._currentAudio = this._audioElement1;
         this._nextAudio = this._audioElement2;
+        this.eventTarget = new EventTarget();
         this.equalizerBands = equalizer_1.equalizerBands;
         this.equalizerSliderValues = equalizer_1.equalizerSliderValues;
         this.equalizerPresets = equalizer_1.equalizerPresets;
@@ -184,24 +187,41 @@ class Helpers extends EventTarget {
         document.title = res.join(' ');
     }
     emit(event, data) {
-        if (!data || typeof data === 'string') {
-            data = data ?? '';
-        }
-        else if (typeof data === 'object') {
-            data = { ...(data ?? {}) };
-        }
-        this.dispatchEvent?.(new CustomEvent(event, {
+        this.eventTarget?.dispatchEvent?.(new CustomEvent(event, {
             detail: data,
         }));
     }
     on(event, callback) {
-        this.addEventListener(event, (e) => callback(e.detail));
+        this.eventTarget.addEventListener(event, (e) => callback(e.detail));
+        this.events.push({ type: event, fn: callback });
     }
     off(event, callback) {
-        this.removeEventListener(event, (e) => callback(e.detail));
+        if (callback) {
+            this.eventTarget.removeEventListener(event, callback);
+            const index = this.events.findIndex(e => e.type === event && e.fn === callback);
+            if (index > -1) {
+                this.events.splice(index, 1);
+            }
+        }
+        if (event === 'all') {
+            this.events.forEach((e) => {
+                this.eventTarget.removeEventListener(e.type, e.fn);
+            });
+            this.events = []; // Clear all events
+            return;
+        }
+        // Remove all events of specific type
+        const eventsToRemove = this.events.filter(e => e.type === event);
+        eventsToRemove.forEach((e) => {
+            this.eventTarget.removeEventListener(e.type, e.fn);
+            const index = this.events.findIndex(event => event === e);
+            if (index > -1) {
+                this.events.splice(index, 1);
+            }
+        });
     }
     once(event, callback) {
-        this.addEventListener(event, (e) => callback(e.detail), { once: true });
+        this.eventTarget.addEventListener(event, e => callback(e.detail), { once: true });
     }
 }
 exports.default = Helpers;

@@ -37,6 +37,8 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
     equalizerSliderValues: EQSliderValues;
     equalizerBands: EQBand[];
     equalizerPresets: EqualizerPreset[];
+    private eventTarget;
+    private events;
     _audioElement1: AudioNode<S>;
     _audioElement2: AudioNode<S>;
     _currentAudio: AudioNode<S>;
@@ -128,37 +130,38 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
      * @param event - The event to remove.
      * @param callback - The function to remove.
      */
-    off(event: 'duration', callback: (data: Time) => void): void;
-    off(event: 'loadstart', callback: (source: HTMLAudioElement) => void): void;
-    off(event: 'loadedmetadata', callback: (source: HTMLAudioElement) => void): void;
-    off(event: 'canplay', callback: (source: HTMLAudioElement) => void): void;
-    off(event: 'waiting', callback: (source: HTMLAudioElement) => void): void;
-    off(event: 'error', callback: (source: HTMLAudioElement) => void): void;
-    off(event: 'ended', callback: (source: HTMLAudioElement) => void): void;
-    off(event: 'pause', callback: (source: HTMLAudioElement) => void): void;
-    off(event: 'play', callback: (source: HTMLAudioElement) => void): void;
-    off(event: 'stop', callback: () => void): void;
-    off(event: 'pause-internal', callback: (source: HTMLAudioElement) => void): void;
-    off(event: 'play-internal', callback: (source: HTMLAudioElement) => void): void;
-    off(event: 'queueNext', callback: () => void): void;
-    off(event: 'startFadeOut', callback: () => void): void;
-    off(event: 'endFadeOut', callback: () => void): void;
-    off(event: 'nextSong', callback: () => void): void;
-    off(event: 'ready', callback: () => void): void;
-    off(event: 'song', callback: (data: S | null) => void): void;
-    off(event: 'backlog', callback: (data: S[]) => void): void;
-    off(event: 'queue', callback: (data: S[]) => void): void;
-    off(event: 'shuffle', callback: (data: IsShuffling) => void): void;
-    off(event: 'mute', callback: (data: IsMuted) => void): void;
-    off(event: 'repeat', callback: (data: RepeatState) => void): void;
-    off(event: 'seeked', callback: (data: TimeState) => void): void;
-    off(event: 'setCurrentAudio', callback: (data: HTMLAudioElement) => void): void;
-    off(event: 'time', callback: (data: TimeState) => void): void;
-    off(event: 'time-internal', callback: (data: TimeState) => void): void;
-    off(event: 'volume', callback: (data: Volume) => void): void;
-    off(event: 'setPreGain', callback: (data: number) => void): void;
-    off(event: 'setPanner', callback: (data: number) => void): void;
-    off(event: 'setFilter', callback: (data: EQBand) => void): void;
+    off(event: 'all', callback?: () => void): void;
+    off(event: 'duration', callback?: () => void): void;
+    off(event: 'loadstart', callback?: () => void): void;
+    off(event: 'loadedmetadata', callback?: () => void): void;
+    off(event: 'canplay', callback?: () => void): void;
+    off(event: 'waiting', callback?: () => void): void;
+    off(event: 'error', callback?: () => void): void;
+    off(event: 'ended', callback?: () => void): void;
+    off(event: 'pause', callback?: () => void): void;
+    off(event: 'play', callback?: () => void): void;
+    off(event: 'stop', callback?: () => void): void;
+    off(event: 'pause-internal', callback?: () => void): void;
+    off(event: 'play-internal', callback?: () => void): void;
+    off(event: 'queueNext', callback?: () => void): void;
+    off(event: 'startFadeOut', callback?: () => void): void;
+    off(event: 'endFadeOut', callback?: () => void): void;
+    off(event: 'nextSong', callback?: () => void): void;
+    off(event: 'ready', callback?: () => void): void;
+    off(event: 'song', callback?: () => void): void;
+    off(event: 'backlog', callback?: () => void): void;
+    off(event: 'queue', callback?: () => void): void;
+    off(event: 'shuffle', callback?: () => void): void;
+    off(event: 'mute', callback?: () => void): void;
+    off(event: 'repeat', callback?: () => void): void;
+    off(event: 'seeked', callback?: () => void): void;
+    off(event: 'setCurrentAudio', callback?: () => void): void;
+    off(event: 'time', callback?: () => void): void;
+    off(event: 'time-internal', callback?: () => void): void;
+    off(event: 'volume', callback?: () => void): void;
+    off(event: 'setPreGain', callback?: () => void): void;
+    off(event: 'setPanner', callback?: () => void): void;
+    off(event: 'setFilter', callback?: () => void): void;
     /**
      * Adds an event listener to the player that will only be called once.
      * @param event - The event to listen for.
