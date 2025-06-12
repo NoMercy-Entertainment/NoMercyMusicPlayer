@@ -108,7 +108,7 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
     private eventTarget: EventTarget = <EventTarget>{};
     private events: {
         type: string;
-        fn: (arg?: any) => void;
+        fn: ((arg?: any) => void) & { original?: (arg?: any) => void };
     }[] = [];
 
     _audioElement1: AudioNode<S> = new AudioNode({
@@ -309,9 +309,11 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
     on(event: 'setPreGain', callback: (data: number) => void): void;
     on(event: 'setPanner', callback: (data: number) => void): void;
     on(event: 'setFilter', callback: (data: EQBand) => void): void;
-    on(event: any, callback: (arg0: any) => any) {
-        this.eventTarget.addEventListener(event, (e: Event) => callback((e as CustomEvent).detail));
-        this.events.push({type: event, fn: callback});
+    on(event: any, callback: (arg: any) => any) {
+        const cb = (e: Event) => callback((e as CustomEvent).detail);
+        cb.original = callback; // Store original callback reference
+        this.eventTarget.addEventListener(event, cb);
+        this.events.push({ type: event, fn: cb });
     }
 
     /**
@@ -352,13 +354,18 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
     off(event: 'setPreGain',callback?: () => void): void;
     off(event: 'setPanner',callback?: () => void): void;
     off(event: 'setFilter',callback?: () => void): void;
-    off(event: any, callback?: (data?: any) => void): void {
+    off(event: any, callback?: () => void) {
         if (callback) {
-            this.eventTarget.removeEventListener(event, callback);
-            const index = this.events.findIndex(e => e.type === event && e.fn === callback);
-            if (index > -1) {
-                this.events.splice(index, 1);
+            // Find event with matching original callback
+            const eventObj = this.events.find(e => e.type === event && e.fn.original === callback);
+            if (eventObj) {
+                this.eventTarget.removeEventListener(event, eventObj.fn);
+                const index = this.events.findIndex(e => e === eventObj);
+                if (index > -1) {
+                    this.events.splice(index, 1);
+                }
             }
+            return;
         }
 
         if (event === 'all') {
