@@ -270,7 +270,7 @@ This project is licensed under the [Apache 2.0 License](./LICENSE) - see the LIC
 
 ## 🏢 About NoMercy Entertainment
 
-NoMercy Entertainment is pioneering the future of digital media technology. Our open-source tools empower developers to create exceptional audio and video experiences.
+NoMercy Entertainment builds open-source media tools that give developers full control over their audio and video.
 
 ### Our Ecosystem
 
