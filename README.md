@@ -4,14 +4,14 @@
 
 Tired of fighting player UI choices? This one has no UI, no opinions - just pure audio power for your custom player.
 
-[![NPM Version](https://img.shields.io/npm/v/@nomercy-entertainment/nomercy-music-player?style=for-the-badge&logo=npm&logoColor=white&color=cb3837)](https://www.npmjs.com/package/@nomercy-entertainment/nomercy-music-player)
-[![NPM Downloads](https://img.shields.io/npm/dm/@nomercy-entertainment/nomercy-music-player?style=for-the-badge&logo=npm&logoColor=white&color=cb3837)](https://www.npmjs.com/package/@nomercy-entertainment/nomercy-music-player)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/NoMercy-Entertainment/NoMercyMusicPlayer/release.yml?style=for-the-badge&logo=github&logoColor=white)](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/actions)
-[![License](https://img.shields.io/github/license/NoMercy-Entertainment/NoMercyMusicPlayer?style=for-the-badge&color=green)](./LICENSE)
+[![NPM Version](https://img.shields.io/npm/v/@nomercy-entertainment/nomercy-music-player?style=flat&logo=npm&logoColor=white&color=cb3837)](https://www.npmjs.com/package/@nomercy-entertainment/nomercy-music-player)
+[![NPM Downloads](https://img.shields.io/npm/dm/@nomercy-entertainment/nomercy-music-player?style=flat&logo=npm&logoColor=white&color=cb3837)](https://www.npmjs.com/package/@nomercy-entertainment/nomercy-music-player)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/NoMercy-Entertainment/NoMercyMusicPlayer/release.yml?style=flat&logo=github&logoColor=white)](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/actions)
+[![License](https://img.shields.io/github/license/NoMercy-Entertainment/NoMercyMusicPlayer?style=flat&color=green)](./LICENSE)
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Framework Agnostic](https://img.shields.io/badge/Framework-Agnostic-orange?style=for-the-badge)](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer)
-[![GitHub Stars](https://img.shields.io/github/stars/NoMercy-Entertainment/NoMercyMusicPlayer?style=for-the-badge&logo=github&logoColor=white&color=yellow)](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/stargazers)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178c6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Framework Agnostic](https://img.shields.io/badge/Framework-Agnostic-orange?style=flat)](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer)
+[![GitHub Stars](https://img.shields.io/github/stars/NoMercy-Entertainment/NoMercyMusicPlayer?style=flat&logo=github&logoColor=white&color=yellow)](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/stargazers)
 
 ## About
 
