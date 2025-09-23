@@ -216,23 +216,6 @@ const player = new MusicPlayer({
 });
 ```
 
-## 🎯 Use Cases
-
-### Custom Music Apps
-Need a player that matches your design system? Build exactly the UI you want while getting professional audio features like gapless playback and crossfade.
-
-### Podcast/Audio Learning Platforms
-Want precise scrubbing and speed controls without fighting default player styles? Get full control over seek behavior and progress visualization.
-
-### Content Management Systems
-Building a CMS with audio preview? Integrate seamlessly without CSS conflicts or forced player styling that breaks your admin interface.
-
-### React/Vue Component Libraries
-Creating reusable audio components? Start with a headless engine and wrap it in your framework patterns without UI dependencies.
-
-### Embedded Audio Players
-Need audio in widgets, dashboards, or third-party sites? No CSS to override, no iframe restrictions - just clean JavaScript integration.
-
 ## 🔧 Browser Support
 
 | Feature | Chrome | Firefox | Safari | Edge |
