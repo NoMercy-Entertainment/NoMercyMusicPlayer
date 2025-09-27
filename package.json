@@ -1,9 +1,23 @@
 {
   "name": "@nomercy-entertainment/nomercy-music-player",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "description": "Full event-driven music player without a UI.",
   "type": "commonjs",
   "main": "./dist/index.js",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer.git"
+  },
+  "contributors": [
+    "Stoney Eagle <stoney@nomercy.tv>"
+  ],
+  "homepage": "https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer",
+  "author": {
+    "name": "NoMercy Entertainment",
+    "email": "info@nomercy.tv",
+    "url": "https://nomercy.tv"
+  },
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
@@ -20,20 +34,6 @@
     "test": "jest",
     "prepublishOnly": "npm run build"
   },
-  "contributors": [
-    "Stoney Eagle <stoney@nomercy.tv>"
-  ],
-  "homepage": "https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer",
-  "author": {
-    "name": "NoMercy Entertainment",
-    "email": "info@nomercy.tv",
-    "url": "https://nomercy.tv"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer.git"
-  },
-  "license": "Apache-2.0",
   "keywords": [
     "music",
     "player",
