@@ -237,7 +237,12 @@ class AudioNode {
         this._audioElement.autoplay = true;
         this._audioElement.loop = false;
         this._audioElement.setAttribute("tabindex", "-1");
-        this._audioElement.volume = this.options.volume ?? 1;
+        let volume = this.options.volume ?? 100;
+        if (volume < 0)
+            volume = 0;
+        if (volume > 100)
+            volume = 100;
+        this._audioElement.volume = volume / 100;
         // this._audioElement.style.display = 'none';
         this._audioElement.crossOrigin = "anonymous";
         document.body.appendChild(this._audioElement);

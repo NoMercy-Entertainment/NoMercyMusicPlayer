@@ -1,6 +1,6 @@
 {
   "name": "@nomercy-entertainment/nomercy-music-player",
-  "version": "0.2.8",
+  "version": "0.2.10",
   "description": "Full event-driven music player without a UI.",
   "type": "commonjs",
   "main": "./dist/index.js",
@@ -41,7 +41,7 @@
   ],
   "dependencies": {
     "@ionic/vue": "8.4.1",
-    "@nomercy-entertainment/media-session": "0.1.10",
+    "@nomercy-entertainment/media-session": "0.2.3",
     "audiomotion-analyzer": "4.5.0",
     "hls.js": "1.5.13"
   },
