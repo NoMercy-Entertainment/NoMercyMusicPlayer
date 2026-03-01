@@ -31,6 +31,9 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
     protected panner: StereoPannerNode | null;
     protected siteTitle: string;
     protected disableAutoPlayback: boolean;
+    _crossfadePrepared: boolean;
+    _debug: boolean;
+    _log(tag: string, message: string): void;
     protected motionConfig: ConstructorOptions;
     protected motionColors: string[];
     equalizerPanning: number;

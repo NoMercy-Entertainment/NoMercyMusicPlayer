@@ -12,6 +12,8 @@ export interface PlayerOptions {
   expose: boolean;
   // Disables the queue automatically playing the next song
   disableAutoPlayback?: boolean;
+  // Enables verbose crossfade debug logging
+  debug?: boolean;
   actions?: {
     play?: MediaSessionActionHandler;
     pause?: MediaSessionActionHandler;

@@ -29,6 +29,9 @@ class PlayerCore extends queue_1.default {
         if (config.disableAutoPlayback !== undefined) {
             this.disableAutoPlayback = config.disableAutoPlayback;
         }
+        if (config.debug !== undefined) {
+            this._debug = config.debug;
+        }
         this.actions = config.actions;
     }
     dispose() {

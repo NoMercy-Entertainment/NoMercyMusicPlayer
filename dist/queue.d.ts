@@ -6,7 +6,9 @@ export default class Queue<S extends BasePlaylistItem> extends Helpers<S> {
     protected _queue: Array<S>;
     protected _backLog: Array<S>;
     protected _shuffle: IsShuffling;
+    private readonly tag;
     constructor();
+    private log;
     getQueue(): Array<S>;
     setQueue(payload: Array<S>): void;
     addToQueue(payload: S): void;
@@ -23,6 +25,11 @@ export default class Queue<S extends BasePlaylistItem> extends Helpers<S> {
     previous(): void;
     playTrack(track: S, tracks?: S[]): void;
     shuffle(value: IsShuffling): void;
+    /**
+     * Server-driven crossfade: load the next track into the secondary audio node
+     * so crossfade can begin when startFadeOut fires.
+     */
+    prepareCrossfade(item?: S): void;
     repeat(value: RepeatState): void;
     protected _initializeQueue(): void;
 }

@@ -21,10 +21,12 @@ export default class AudioNode<S extends BasePlaylistItem> {
   public volume: number = 100;
 
   public isFading: boolean = false;
+  public isFadingOut: boolean = false;
   public context: AudioContext | null = null;
   public motion: AudioMotionAnalyzer | null = null;
 
   private accessToken?: string;
+  private tag: string;
 
   protected options: AudioOptions = <AudioOptions>{};
   protected parent: Helpers<S>;
@@ -44,9 +46,11 @@ export default class AudioNode<S extends BasePlaylistItem> {
   protected fadeOutVolume = 0;
   protected fadeInVolume = 100;
 
-  protected hasNextQueued: boolean = false;
+  public hasNextQueued: boolean = false;
+  public nextSongFired: boolean = false;
   protected repeat: "off" | "one" | "all" = "off";
   _disableAutoPlayback: boolean = false;
+  private _lastSuppressedLog: number = 0;
 
   // Android TV
   protected isTv = window.matchMedia("(width: 960px) and (height: 540px)")
@@ -60,6 +64,7 @@ export default class AudioNode<S extends BasePlaylistItem> {
   constructor(options: AudioOptions, parent: Helpers<S>) {
     this.options = options;
     this.parent = parent;
+    this.tag = `AudioNode[${options.id}]`;
     this.prefetchLeeway = options.prefetchLeeway ?? 10;
     this.fadeDuration = options.fadeDuration ?? 3;
     this.bands = options.bands;
@@ -67,6 +72,10 @@ export default class AudioNode<S extends BasePlaylistItem> {
     this.motionColors = options.motionColors;
 
     this._initialize();
+  }
+
+  private log(message: string): void {
+    this.parent._log(this.tag, message);
   }
 
   public dispose(): void {
@@ -79,6 +88,7 @@ export default class AudioNode<S extends BasePlaylistItem> {
   }
 
   public setSource(url: string): AudioNode<S> {
+    this.log(`setSource: autoplay=${this._audioElement.autoplay}, isFading=${this.isFading}, isFadingOut=${this.isFadingOut}`);
     this._audioElement.pause();
     this._audioElement.removeAttribute("src");
 
@@ -221,8 +231,10 @@ export default class AudioNode<S extends BasePlaylistItem> {
 
   public _fadeIn(firstRun: boolean = false) {
     if (firstRun) {
+      this.log(`_fadeIn START, volume=${this.volume}, steps=${this.crossFadeSteps}`);
       this.fadeVolume(0);
       this.fadeInVolume = 0;
+      this.nextSongFired = false;
     }
 
     this._audioElement.play().then();
@@ -234,6 +246,7 @@ export default class AudioNode<S extends BasePlaylistItem> {
     } else {
       this.fadeInVolume = this.volume;
       this.isFading = false;
+      this.log(`_fadeIn COMPLETE, isFading=false`);
     }
 
     if (this.fadeInVolume > 100) {
@@ -242,31 +255,36 @@ export default class AudioNode<S extends BasePlaylistItem> {
 
     this.fadeVolume(this.fadeInVolume);
 
-    if (this.fadeInVolume >= this.volume - this.crossFadeSteps * 12) {
+    if (!this.nextSongFired && this.fadeInVolume >= this.volume - this.crossFadeSteps * 12) {
+      this.nextSongFired = true;
+      this.log(`emitting nextSong (fadeInVol=${this.fadeInVolume})`);
       this.parent.emit("nextSong");
     }
   }
 
   public _fadeOut(firstRun: boolean = false) {
     this.isFading = true;
+    this.isFadingOut = true;
     if (firstRun) {
+      this.log(`_fadeOut START, volume=${this.volume}, steps=${this.crossFadeSteps}`);
       this.fadeOutVolume = this.volume;
     }
 
     if (this.fadeOutVolume > 0) {
       this.fadeOutVolume -= this.crossFadeSteps;
-      setTimeout(() => this._fadeOut(), 200);
-    } else {
-      this.fadeOutVolume = 0;
+      if (this.fadeOutVolume < 0) {
+        this.fadeOutVolume = 0;
+      }
+      this.fadeVolume(this.fadeOutVolume);
+      if (this.fadeOutVolume > 0) {
+        setTimeout(() => this._fadeOut(), 200);
+      }
     }
 
-    if (this.fadeOutVolume < 0) {
+    if (this.fadeOutVolume <= 0) {
       this.fadeOutVolume = 0;
-    }
-
-    this.fadeVolume(this.fadeOutVolume);
-
-    if (this.fadeOutVolume == 0) {
+      this.fadeVolume(0);
+      this.log(`_fadeOut COMPLETE, pausing + cleanup`);
       this.pause();
 
       URL.revokeObjectURL(this._audioElement?.src);
@@ -278,6 +296,9 @@ export default class AudioNode<S extends BasePlaylistItem> {
       setTimeout(() => {
         this.hasNextQueued = false;
         this.isFading = false;
+        this.isFadingOut = false;
+        this.log(`emitting setCurrentAudio, restoring autoplay=true`);
+        this._audioElement.autoplay = true;
         this.parent.emit("setCurrentAudio", this._audioElement);
       }, 500);
     }
@@ -321,6 +342,8 @@ export default class AudioNode<S extends BasePlaylistItem> {
     this._initializeContext();
     if (!this.isFading) {
       this.parent.emit("play", this._audioElement);
+    } else {
+      this.log(`playEvent SUPPRESSED (isFading=true)`);
     }
   }
 
@@ -329,10 +352,13 @@ export default class AudioNode<S extends BasePlaylistItem> {
     this.parent.emit("pause-internal", this._audioElement);
     if (!this.isFading) {
       this.parent.emit("pause", this._audioElement);
+    } else {
+      this.log(`pauseEvent SUPPRESSED (isFading=true)`);
     }
   }
 
   private endedEvent() {
+    this.log(`endedEvent, isFading=${this.isFading}`);
     this.state = PlayerState.ENDED;
     this.parent.emit("ended", this._audioElement);
   }
@@ -373,6 +399,12 @@ export default class AudioNode<S extends BasePlaylistItem> {
     this.parent.emit("time-internal", this.getTimeData());
     if (!this.isFading || this.repeat == "one") {
       this.parent.emit("time", this.getTimeData());
+    } else {
+      const now = Date.now();
+      if (now - this._lastSuppressedLog > 2000) {
+        this._lastSuppressedLog = now;
+        this.log(`timeupdate SUPPRESSED: pos=${this._audioElement.currentTime.toFixed(1)}, dur=${this._audioElement.duration.toFixed(1)}, isFading=${this.isFading}`);
+      }
     }
 
     if (
@@ -383,14 +415,14 @@ export default class AudioNode<S extends BasePlaylistItem> {
       !this._disableAutoPlayback
     ) {
       this.hasNextQueued = true;
+      this.log(`emitting queueNext (pos=${this._audioElement.currentTime.toFixed(1)}, dur=${this._audioElement.duration.toFixed(1)})`);
       this.parent.emit("queueNext");
     }
 
     if (
       this.repeat !== "one" &&
       this._audioElement.currentTime >=
-      this._audioElement.duration - this.fadeDuration * 4 &&
-      !this._disableAutoPlayback
+      this._audioElement.duration - this.fadeDuration
     ) {
       this.parent.emit("startFadeOut");
     }
@@ -398,7 +430,9 @@ export default class AudioNode<S extends BasePlaylistItem> {
 
   private durationchangeEvent() {
     this.duration = this._audioElement.duration;
-    this.parent.emit("duration", this._audioElement.duration);
+    if (!this.isFading) {
+      this.parent.emit("duration", this._audioElement.duration);
+    }
   }
 
   private volumechangeEvent() {
@@ -406,7 +440,8 @@ export default class AudioNode<S extends BasePlaylistItem> {
   }
 
   private seekedEvent() {
-    console.log("seeked", this._audioElement.currentTime);
+    if (this.isFading) return;
+    this.log(`seeked ${this._audioElement.currentTime.toFixed(2)}`);
     this.parent.emit("seeked", {
       buffered: this._audioElement.buffered.length,
       duration: this._audioElement.duration,
@@ -588,7 +623,7 @@ export default class AudioNode<S extends BasePlaylistItem> {
       this.context
         .resume()
         .then(() => {
-          console.log("AudioContext resumed");
+          this.log("AudioContext resumed");
         })
         .catch((e) => {
           console.error("Failed to resume AudioContext:", e);

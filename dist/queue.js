@@ -13,7 +13,11 @@ class Queue extends helpers_1.default {
         this._queue = [];
         this._backLog = [];
         this._shuffle = false;
+        this.tag = 'Queue';
         this._initializeQueue();
+    }
+    log(message) {
+        this._log(this.tag, message);
     }
     getQueue() {
         return this._queue;
@@ -62,6 +66,7 @@ class Queue extends helpers_1.default {
         this.emit('backlog', this._backLog);
     }
     setCurrentSong(payload) {
+        this.log(`setCurrentSong: '${payload?.name ?? 'null'}'`);
         this.currentSong = payload;
         this.emit('song', payload);
         if (!payload)
@@ -132,6 +137,71 @@ class Queue extends helpers_1.default {
         this.isShuffling = value;
         this.emit('shuffle', value);
     }
+    /**
+     * Server-driven crossfade: load the next track into the secondary audio node
+     * so crossfade can begin when startFadeOut fires.
+     */
+    prepareCrossfade(item) {
+        if (this._repeat === 'one')
+            return;
+        if (this._crossfadePrepared)
+            return;
+        const target = item ?? this._queue[0];
+        if (!target)
+            return;
+        this._crossfadePrepared = true;
+        const currentVolume = this.volume;
+        this.log(`prepareCrossfade: '${target?.name}', currentSong='${this.currentSong?.name}', volume=${currentVolume}`);
+        this.getNewSource(target)
+            .then((src) => {
+            this._currentAudio.hasNextQueued = true;
+            this._nextAudio.isFading = true;
+            // Disable autoplay to prevent silent background playback during preparation
+            this._nextAudio.getAudioElement().autoplay = false;
+            this.log(`prepareCrossfade: source loaded, nextAudio.autoplay=false`);
+            this._nextAudio.setSource(src);
+            this._nextAudio.fadeVolume(0);
+            this.once('startFadeOut', () => {
+                if (this._repeat === 'one')
+                    return;
+                this.log(`prepareCrossfade: startFadeOut fired, beginning ${this.fadeDuration}s crossfade`);
+                this._currentAudio.isFading = true;
+                this._nextAudio.isFading = true;
+                this._currentAudio.setCrossFadeSteps(currentVolume / this.fadeDuration / 5);
+                this._currentAudio._fadeOut(true);
+                this._nextAudio.setCrossFadeSteps(currentVolume / this.fadeDuration / 5);
+                this._nextAudio._fadeIn(true);
+                this.once('nextSong', () => {
+                    if (this._repeat === 'one')
+                        return;
+                    this.log(`prepareCrossfade: nextSong fired, switching to '${target?.name}', nextAudio.currentTime=${this._nextAudio.currentTime.toFixed(1)}`);
+                    this.addToBackLog(this.currentSong);
+                    this.currentSong = target;
+                    this.removeFromQueue(target);
+                    this._nextAudio.isFading = false;
+                    this.emit('song', target);
+                    this.once('setCurrentAudio', () => {
+                        if (this._repeat == 'one')
+                            return;
+                        this.log(`prepareCrossfade: setCurrentAudio, swapping nodes`);
+                        this._currentAudio.isFading = false;
+                        this._currentAudio = this._nextAudio;
+                        this._nextAudio =
+                            this._currentAudio == this._audioElement1
+                                ? this._audioElement2
+                                : this._audioElement1;
+                        // Restore autoplay on new current node
+                        this._currentAudio.getAudioElement().autoplay = true;
+                        this._crossfadePrepared = false;
+                    });
+                });
+            });
+        })
+            .catch((err) => {
+            this._crossfadePrepared = false;
+            console.error('prepareCrossfade error:', err);
+        });
+    }
     repeat(value) {
         this._repeat = value;
         this.emit('repeat', this._repeat);
@@ -140,6 +210,13 @@ class Queue extends helpers_1.default {
         this._nextAudio.setRepeating(this._repeat);
     }
     _initializeQueue() {
+        // Fallback: if no prepareCrossfade was called (e.g., server didn't send the signal),
+        // trigger a local crossfade when startFadeOut fires and the queue has tracks.
+        this.on('startFadeOut', () => {
+            if (!this._crossfadePrepared && this._queue.length > 0) {
+                this.prepareCrossfade();
+            }
+        });
         this.on('ended', () => {
             if (this.disableAutoPlayback)
                 return;
@@ -162,14 +239,23 @@ class Queue extends helpers_1.default {
             if (this._queue.length == 0)
                 return;
             const currentVolume = this.volume;
-            this.getNewSource(this._queue[0])
+            const nextTrack = this._queue[0];
+            this.log(`queueNext: pre-loading '${nextTrack?.name}', volume=${currentVolume}`);
+            this.getNewSource(nextTrack)
                 .then((src) => {
-                this._currentAudio.isFading = true;
+                this._crossfadePrepared = true;
+                this._nextAudio.isFading = true;
+                // Disable autoplay to prevent silent background playback during preparation
+                this._nextAudio.getAudioElement().autoplay = false;
+                this.log(`queueNext: source loaded, nextAudio.autoplay=false`);
                 this._nextAudio.setSource(src);
                 this._nextAudio.fadeVolume(0);
                 this.once('startFadeOut', () => {
                     if (this._repeat === 'one')
                         return;
+                    this.log(`queueNext: startFadeOut fired, beginning ${this.fadeDuration}s crossfade`);
+                    this._currentAudio.isFading = true;
+                    this._nextAudio.isFading = true;
                     this._currentAudio.setCrossFadeSteps(currentVolume / this.fadeDuration / 5);
                     this._currentAudio._fadeOut(true);
                     this._nextAudio.setCrossFadeSteps(currentVolume / this.fadeDuration / 5);
@@ -178,33 +264,44 @@ class Queue extends helpers_1.default {
                         if (this._repeat === 'one')
                             return;
                         const nexItem = this._queue[0];
+                        this.log(`queueNext: nextSong fired, switching to '${nexItem?.name}', nextAudio.currentTime=${this._nextAudio.currentTime.toFixed(1)}`);
                         this.addToBackLog(this.currentSong);
                         this.currentSong = nexItem;
                         this.removeFromQueue(nexItem);
+                        this._nextAudio.isFading = false;
                         this.emit('song', nexItem);
                         this.once('setCurrentAudio', () => {
                             if (this._repeat == 'one')
                                 return;
+                            this.log(`queueNext: setCurrentAudio, swapping nodes`);
                             this._currentAudio.isFading = false;
                             this._currentAudio = this._nextAudio;
                             this._nextAudio =
                                 this._currentAudio == this._audioElement1
                                     ? this._audioElement2
                                     : this._audioElement1;
+                            // Restore autoplay on new current node
+                            this._currentAudio.getAudioElement().autoplay = true;
+                            this._crossfadePrepared = false;
                         });
                     });
                 });
             })
                 .catch((err) => {
-                console.log(err);
+                this._crossfadePrepared = false;
+                console.error('queueNext error:', err);
                 this.currentSong = null;
             });
         });
         this.on('ended', (el) => {
             if (this.disableAutoPlayback)
                 return;
-            if (el == this._currentAudio.getAudioElement()) {
+            if (el == this._currentAudio.getAudioElement() && !this._currentAudio.isFading) {
+                this.log(`ended: clearing currentSong (not fading)`);
                 this.currentSong = null;
+            }
+            else {
+                this.log(`ended: SKIPPED clear (isFading=${this._currentAudio.isFading}, isCurrentEl=${el == this._currentAudio.getAudioElement()})`);
             }
         });
         this.on('error', this.next.bind(this));

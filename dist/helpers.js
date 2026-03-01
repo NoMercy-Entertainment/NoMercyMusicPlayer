@@ -8,6 +8,11 @@ const audioNode_1 = __importDefault(require("./audioNode"));
 const state_1 = require("./state");
 const equalizer_1 = require("./equalizer");
 class Helpers extends EventTarget {
+    _log(tag, message) {
+        if (!this._debug)
+            return;
+        console.log(`[${tag}]`, message);
+    }
     constructor() {
         super();
         this.volume = Number(localStorage.getItem('nmplayer-music-volume')) || 100;
@@ -38,6 +43,8 @@ class Helpers extends EventTarget {
         this.panner = null;
         this.siteTitle = 'NoMercy Player';
         this.disableAutoPlayback = false;
+        this._crossfadePrepared = false;
+        this._debug = false;
         this.motionConfig = {
             alphaBars: true,
             ansiBands: true,

@@ -7,6 +7,7 @@ export interface PlayerOptions {
     motionColors?: string[];
     expose: boolean;
     disableAutoPlayback?: boolean;
+    debug?: boolean;
     actions?: {
         play?: MediaSessionActionHandler;
         pause?: MediaSessionActionHandler;

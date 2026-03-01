@@ -41,6 +41,9 @@ export class PlayerCore<S extends BasePlaylistItem> extends Queue<S> {
     if (config.disableAutoPlayback !== undefined) {
       this.disableAutoPlayback = config.disableAutoPlayback;
     }
+    if (config.debug !== undefined) {
+      this._debug = config.debug;
+    }
 
 	this.actions = config.actions;
   }

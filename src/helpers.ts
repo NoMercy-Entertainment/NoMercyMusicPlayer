@@ -42,6 +42,13 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
     protected panner: StereoPannerNode | null = null;
     protected siteTitle: string = 'NoMercy Player';
     protected disableAutoPlayback: boolean = false;
+    public _crossfadePrepared: boolean = false;
+    public _debug: boolean = false;
+
+    _log(tag: string, message: string): void {
+        if (!this._debug) return;
+        console.log(`[${tag}]`, message);
+    }
 
     protected motionConfig: ConstructorOptions = {
         alphaBars: true,
