@@ -7,10 +7,10 @@ import type {
     IsPlaying, IsRepeating, IsShuffling, PlayerOptions,
     RepeatState, BasePlaylistItem, Time, TimeState, Volume,
 } from './types';
-import {PlayerState, VolumeState} from "./state";
+import { PlayerState, VolumeState } from "./state";
 
-import {equalizerBands, equalizerPresets, equalizerSliderValues} from "./equalizer";
-import {ConstructorOptions} from "audiomotion-analyzer";
+import { equalizerBands, equalizerPresets, equalizerSliderValues } from "./equalizer";
+import { ConstructorOptions } from "audiomotion-analyzer";
 
 export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
     public volume: Volume = Number(localStorage.getItem('nmplayer-music-volume')) || 100;
@@ -237,6 +237,14 @@ export default class Helpers<S extends BasePlaylistItem> extends EventTarget {
 
         document.title = res.join(' ');
     }
+
+    public isPlatform(platform: "android" | "ios"): boolean {
+        const ua = navigator.userAgent.toLowerCase();
+        if (platform === "android") return /android/.test(ua);
+        if (platform === "ios") return /iphone|ipad|ipod/.test(ua);
+        return false;
+    }
+
 
     /**
      * Trigger an event on the player.

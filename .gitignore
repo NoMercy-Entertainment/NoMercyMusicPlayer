@@ -10,3 +10,7 @@ yarn-error.log*
 .idea/
 *.log
 .DS_Store
+
+/dist
+/build
+/coverage

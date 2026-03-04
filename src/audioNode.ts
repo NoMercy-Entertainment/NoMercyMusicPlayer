@@ -1,5 +1,3 @@
-import { isPlatform } from "@ionic/vue";
-
 import Helpers from "./helpers";
 
 import type { AudioOptions, EQBand, BasePlaylistItem } from "./types";
@@ -148,7 +146,7 @@ export default class AudioNode<S extends BasePlaylistItem> {
   }
 
   public setVolume(volume: number): void {
-    const isMobileDevice = isPlatform("android") || isPlatform("ios");
+    const isMobileDevice = this.parent.isPlatform("android") || this.parent.isPlatform("ios");
     if (isMobileDevice) {
       this._audioElement.volume = 1;
       return;
