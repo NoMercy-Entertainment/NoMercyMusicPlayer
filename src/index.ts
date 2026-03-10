@@ -6,6 +6,9 @@ import Queue from './queue';
 import {PlayerOptions, type BasePlaylistItem, TimeState} from './types';
 import {PlayerState, VolumeState} from "./state";
 
+export type { BasePlaylistItem, PlayerOptions, TimeState, RepeatState, EQBand, EqualizerPreset, EQSliderValues } from './types';
+export type { PlayerState, VolumeState } from './state';
+
 export class PlayerCore<S extends BasePlaylistItem> extends Queue<S> {
   mediaSession: MediaSession;
   actions?: {

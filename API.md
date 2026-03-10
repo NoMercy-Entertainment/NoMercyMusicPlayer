@@ -928,4 +928,4 @@ class EqualizerManager {
 
 ---
 
-This comprehensive API documentation covers all aspects of the NoMercy Music Player. For more examples and advanced usage patterns, please refer to the [GitHub Wiki](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/wiki).
+This comprehensive API documentation covers all aspects of the NoMercy Music Player. For more examples and advanced usage patterns, please refer to the [GitHub Wiki](https://github.com/NoMercy-Entertainment/nomercy-music-player/wiki).

@@ -7,12 +7,12 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer.git"
+    "url": "git+https://github.com/NoMercy-Entertainment/nomercy-music-player.git"
   },
   "contributors": [
     "Stoney Eagle <stoney@nomercy.tv>"
   ],
-  "homepage": "https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer",
+  "homepage": "https://github.com/NoMercy-Entertainment/nomercy-music-player",
   "author": {
     "name": "NoMercy Entertainment",
     "email": "info@nomercy.tv",

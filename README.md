@@ -6,12 +6,12 @@ Tired of fighting player UI choices? This one has no UI, no opinions - just pure
 
 [![NPM Version](https://img.shields.io/npm/v/@nomercy-entertainment/nomercy-music-player?style=flat&logo=npm&logoColor=white&color=cb3837)](https://www.npmjs.com/package/@nomercy-entertainment/nomercy-music-player)
 [![NPM Downloads](https://img.shields.io/npm/dm/@nomercy-entertainment/nomercy-music-player?style=flat&logo=npm&logoColor=white&color=cb3837)](https://www.npmjs.com/package/@nomercy-entertainment/nomercy-music-player)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/NoMercy-Entertainment/NoMercyMusicPlayer/release.yml?style=flat&logo=github&logoColor=white)](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/actions)
-[![License](https://img.shields.io/github/license/NoMercy-Entertainment/NoMercyMusicPlayer?style=flat&color=green)](./LICENSE)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/NoMercy-Entertainment/nomercy-music-player/release.yml?style=flat&logo=github&logoColor=white)](https://github.com/NoMercy-Entertainment/nomercy-music-player/actions)
+[![License](https://img.shields.io/github/license/NoMercy-Entertainment/nomercy-music-player?style=flat&color=green)](./LICENSE)
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178c6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Framework Agnostic](https://img.shields.io/badge/Framework-Agnostic-orange?style=flat)](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer)
-[![GitHub Stars](https://img.shields.io/github/stars/NoMercy-Entertainment/NoMercyMusicPlayer?style=flat&logo=github&logoColor=white&color=yellow)](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/stargazers)
+[![Framework Agnostic](https://img.shields.io/badge/Framework-Agnostic-orange?style=flat)](https://github.com/NoMercy-Entertainment/nomercy-music-player)
+[![GitHub Stars](https://img.shields.io/github/stars/NoMercy-Entertainment/nomercy-music-player?style=flat&logo=github&logoColor=white&color=yellow)](https://github.com/NoMercy-Entertainment/nomercy-music-player/stargazers)
 
 ## About
 
@@ -101,9 +101,9 @@ player.on('time', (timeState) => {
 
 **💡 Need framework-specific help?** Check out our comprehensive guides:
 
-- **[Vue 3 Integration Guide](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/wiki/Vue-Integration)** - Composition API, Pinia stores, and reactive patterns
-- **[React Integration Guide](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/wiki/React-Integration)** - Hooks, context, and TypeScript patterns
-- **[Quick Start Guide](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/wiki/Quick-Start-Guide)** - Get running in 5 minutes
+- **[Vue 3 Integration Guide](https://github.com/NoMercy-Entertainment/nomercy-music-player/wiki/Vue-Integration)** - Composition API, Pinia stores, and reactive patterns
+- **[React Integration Guide](https://github.com/NoMercy-Entertainment/nomercy-music-player/wiki/React-Integration)** - Hooks, context, and TypeScript patterns
+- **[Quick Start Guide](https://github.com/NoMercy-Entertainment/nomercy-music-player/wiki/Quick-Start-Guide)** - Get running in 5 minutes
 
 ### Vanilla JavaScript Example
 
@@ -131,11 +131,11 @@ player.setVolume(75);
 
 | Resource | Description |
 |----------|-------------|
-| **[🏠 Wiki Home](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/wiki)** | Complete documentation hub |
-| **[⚡ Quick Start](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/wiki/Quick-Start-Guide)** | Get running in 5 minutes |
-| **[📚 API Reference](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/blob/master/API.md)** | Complete TypeScript API docs |
-| **[🔧 Troubleshooting](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/wiki/Troubleshooting)** | Common issues and solutions |
-| **[🏗️ Architecture](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/wiki/Player-Architecture)** | Technical implementation details |
+| **[🏠 Wiki Home](https://github.com/NoMercy-Entertainment/nomercy-music-player/wiki)** | Complete documentation hub |
+| **[⚡ Quick Start](https://github.com/NoMercy-Entertainment/nomercy-music-player/wiki/Quick-Start-Guide)** | Get running in 5 minutes |
+| **[📚 API Reference](https://github.com/NoMercy-Entertainment/nomercy-music-player/blob/master/API.md)** | Complete TypeScript API docs |
+| **[🔧 Troubleshooting](https://github.com/NoMercy-Entertainment/nomercy-music-player/wiki/Troubleshooting)** | Common issues and solutions |
+| **[🏗️ Architecture](https://github.com/NoMercy-Entertainment/nomercy-music-player/wiki/Player-Architecture)** | Technical implementation details |
 
 ## 🎛️ Advanced Features
 
@@ -230,14 +230,14 @@ const player = new MusicPlayer({
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer/blob/master/CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](https://github.com/NoMercy-Entertainment/nomercy-music-player/blob/master/CONTRIBUTING.md) for details.
 
 ### Development Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer.git
-cd NoMercyMusicPlayer
+git clone https://github.com/NoMercy-Entertainment/nomercy-music-player.git
+cd nomercy-music-player
 
 # Install dependencies
 npm install
@@ -257,11 +257,11 @@ NoMercy Entertainment builds open-source media tools that give developers full c
 
 ### Our Ecosystem
 
-- **[NoMercy MediaServer](https://github.com/NoMercy-Entertainment/NoMercyMediaServer)** - Complete media server solution
-- **[NoMercy VideoPlayer](https://github.com/NoMercy-Entertainment/NoMercyVideoPlayer)** - Advanced HTML5 video player
-- **[NoMercy FFmpeg](https://github.com/NoMercy-Entertainment/NoMercyFFMpeg)** - Optimized FFmpeg builds  
-- **[NoMercy Music Player](https://github.com/NoMercy-Entertainment/NoMercyMusicPlayer)** - Headless audio engine
-- **[NoMercy Tesseract](https://github.com/NoMercy-Entertainment/NoMercyTesseract)** - OCR training data
+- **[NoMercy MediaServer](https://github.com/NoMercy-Entertainment/nomercy-media-server)** - Complete media server solution
+- **[NoMercy VideoPlayer](https://github.com/NoMercy-Entertainment/nomercy-video-player)** - Advanced HTML5 video player
+- **[NoMercy FFmpeg](https://github.com/NoMercy-Entertainment/nomercy-ffmpeg)** - Optimized FFmpeg builds  
+- **[NoMercy Music Player](https://github.com/NoMercy-Entertainment/nomercy-music-player)** - Headless audio engine
+- **[NoMercy Tesseract](https://github.com/NoMercy-Entertainment/nomercy-tesseract)** - OCR training data
 
 ### Links
 
