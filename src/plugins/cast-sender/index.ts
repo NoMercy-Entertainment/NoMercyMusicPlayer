@@ -25,10 +25,12 @@ export class CastSenderPlugin extends BaseCastSenderPlugin<NMMusicPlayer<any>, M
 	static override readonly description: string = 'Chromecast sender — full media bridge for music';
 	static override readonly translations: Translations = translationsFromGlob('./i18n/*.ts');
 
+	/** Returns `'audio/mpeg'` as the default content type for music items. */
 	protected override defaultContentType(): string {
 		return 'audio/mpeg';
 	}
 
+	/** Builds a `MusicTrackMediaMetadata` (or `GenericMediaMetadata` fallback) from the music item. */
 	protected override async buildMetadata(
 		item: MusicPlaylistItem,
 		ctors: ChromeCastMediaCtors & { MusicTrackMediaMetadata?: new () => Record<string, unknown> },
@@ -50,4 +52,5 @@ export class CastSenderPlugin extends BaseCastSenderPlugin<NMMusicPlayer<any>, M
 	}
 }
 
+/** Plugin alias for the music {@link CastSenderPlugin}. Pass to `addPlugin(castSenderPlugin)`. */
 export const castSenderPlugin = CastSenderPlugin;

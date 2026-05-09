@@ -8,6 +8,7 @@ import type {
 import type { NMMusicPlayer } from '../index';
 import type { MusicPlaylistItem } from '../types';
 
+/** Options for {@link LyricsPlugin}. */
 export interface LyricsOptions {
 	/** Resolve a track to a lyrics URL. Defaults to `track.lyricsUrl`. */
 	getLyricsUrl?: (track: MusicPlaylistItem) => string | undefined;
@@ -42,6 +43,7 @@ export class LyricsPlugin extends Plugin<NMMusicPlayer<any>, LyricsOptions> {
 	private cueList?: CueList<LyricPayload>;
 	private activeCue?: Cue<LyricPayload>;
 
+	/** Attaches the `current` listener to auto-fetch lyrics when a new track loads. */
 	override use(): void {
 		this.on('current', (payload) => {
 			if (this.opts?.autoFetch === false)
@@ -60,6 +62,7 @@ export class LyricsPlugin extends Plugin<NMMusicPlayer<any>, LyricsOptions> {
 		});
 	}
 
+	/** Disposes the active cue tracker and clears all lyric state. */
 	override dispose(): void {
 		this.clear();
 	}
@@ -152,4 +155,5 @@ export class LyricsPlugin extends Plugin<NMMusicPlayer<any>, LyricsOptions> {
 	}
 }
 
+/** Plugin alias for {@link LyricsPlugin}. Pass to `addPlugin(lyricsPlugin)`. */
 export const lyricsPlugin = LyricsPlugin;

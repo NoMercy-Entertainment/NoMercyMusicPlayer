@@ -2,6 +2,7 @@ import { Plugin } from '@nomercy-entertainment/nomercy-player-core';
 import type { IRealtimeChannel } from '@nomercy-entertainment/nomercy-player-core';
 import type { NMMusicPlayer } from '../index';
 
+/** Options for the music {@link LiveTranscodingPlugin}. */
 export interface LiveTranscodingOptions {
 	/** Server endpoint that owns the transcoding job lifecycle. */
 	wsUrl: string;
@@ -13,6 +14,7 @@ export interface LiveTranscodingOptions {
 	seekTimeoutMs?: number;
 }
 
+/** Events emitted by the music {@link LiveTranscodingPlugin}. */
 export interface LiveTranscodingEvents {
 	'job:started': { jobId: string; sourceUrl: string };
 	'job:progress': { jobId: string; transcodedSeconds: number; totalSeconds?: number };
@@ -53,6 +55,7 @@ export class LiveTranscodingPlugin extends Plugin<NMMusicPlayer<any>, LiveTransc
 	private latestReadyTime: number = 0;
 	private readonly pendingGates: Set<(t: number) => void> = new Set();
 
+	/** Opens the control WebSocket and wires `beforeLoad` / `beforeSeek` segment-ready gates. */
 	override use(): void {
 		const url = this.opts?.wsUrl;
 		if (!url) {
@@ -84,6 +87,7 @@ export class LiveTranscodingPlugin extends Plugin<NMMusicPlayer<any>, LiveTransc
 		});
 	}
 
+	/** Resolves all pending gates, closes the WebSocket channel, and resets internal state. */
 	override dispose(): void {
 		// Reject any pending gates so awaiting `delay()` promises settle and
 		// the dispatch pipeline can drain on teardown.
@@ -152,4 +156,5 @@ export class LiveTranscodingPlugin extends Plugin<NMMusicPlayer<any>, LiveTransc
 	}
 }
 
+/** Plugin alias for the music {@link LiveTranscodingPlugin}. Pass to `addPlugin(liveTranscodingPlugin)`. */
 export const liveTranscodingPlugin = LiveTranscodingPlugin;

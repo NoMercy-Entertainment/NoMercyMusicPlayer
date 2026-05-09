@@ -1,6 +1,7 @@
 import { Plugin } from '@nomercy-entertainment/nomercy-player-core';
 import type { NMMusicPlayer } from '../index';
 
+/** Options for the music {@link DrmPlugin}. */
 export interface DrmOptions {
 	/** EME key system identifier — `'com.widevine.alpha' | 'com.apple.fps' | 'com.microsoft.playready'` etc. */
 	keySystem: string;
@@ -16,6 +17,7 @@ export interface DrmOptions {
 	transformLicenseResponse?: (response: ArrayBuffer) => ArrayBuffer | Promise<ArrayBuffer>;
 }
 
+/** Events emitted by the music {@link DrmPlugin}. */
 export interface DrmEvents {
 	'key:requested': { sessionId: string; initData: ArrayBuffer };
 	'key:granted': { sessionId: string };
@@ -51,6 +53,7 @@ export class DrmPlugin extends Plugin<NMMusicPlayer<any>, DrmOptions, DrmEvents>
 	private mediaKeys: MediaKeys | null = null;
 	private supported: boolean = false;
 
+	/** Probes EME availability and wires the `current` listener to trigger key acquisition. */
 	override async use(): Promise<void> {
 		const nav = (typeof navigator !== 'undefined' ? navigator : undefined) as
 			| (Navigator & { requestMediaKeySystemAccess?: Navigator['requestMediaKeySystemAccess'] })
@@ -75,6 +78,7 @@ export class DrmPlugin extends Plugin<NMMusicPlayer<any>, DrmOptions, DrmEvents>
 		});
 	}
 
+	/** Clears the MediaKeys reference and resets support state. */
 	override dispose(): void {
 		this.mediaKeys = null;
 		this.supported = false;
@@ -126,4 +130,5 @@ export class DrmPlugin extends Plugin<NMMusicPlayer<any>, DrmOptions, DrmEvents>
 	}
 }
 
+/** Plugin alias for the music {@link DrmPlugin}. Pass to `addPlugin(drmPlugin)`. */
 export const drmPlugin = DrmPlugin;

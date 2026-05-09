@@ -2,6 +2,7 @@ import { Plugin } from '@nomercy-entertainment/nomercy-player-core';
 import type { NMMusicPlayer } from '../index';
 import type { MusicPlaylistItem } from '../types';
 
+/** Options for {@link AutoAdvancePlugin}. */
 export interface AutoAdvanceOptions {
 	/** Master toggle. Default `true`. */
 	enabled?: boolean;
@@ -32,6 +33,7 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOpt
 	private preloadHandlers: PreloadHandler[] = [];
 	private crossfadeHandlers: CrossfadeHandler[] = [];
 
+	/** Merges defaults into options before passing up to the base `Plugin.initialize`. */
 	override initialize(player: NMMusicPlayer<any>, opts: AutoAdvanceOptions, lifecycle: any): void {
 		const merged: AutoAdvanceOptions = {
 			enabled: true,
@@ -43,6 +45,7 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOpt
 		super.initialize(player, merged, lifecycle);
 	}
 
+	/** Attaches `ended` and `trackEndingSoon` listeners to drive queue advancement and crossfade. */
 	override use(): void {
 		this.on('ended', () => {
 			void this.onEnded();
@@ -135,4 +138,5 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOpt
 	}
 }
 
+/** Plugin alias for {@link AutoAdvancePlugin}. Pass to `addPlugin(autoAdvancePlugin)`. */
 export const autoAdvancePlugin = AutoAdvancePlugin;

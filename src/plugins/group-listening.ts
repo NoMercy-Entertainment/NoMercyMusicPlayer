@@ -2,6 +2,7 @@ import { Plugin } from '@nomercy-entertainment/nomercy-player-core';
 import type { IRealtimeChannel } from '@nomercy-entertainment/nomercy-player-core';
 import type { NMMusicPlayer } from '../index';
 
+/** Options for {@link GroupListeningPlugin}. */
 export interface GroupListeningOptions {
 	/** Server endpoint for room/session sync. */
 	wsUrl: string;
@@ -15,6 +16,7 @@ export interface GroupListeningOptions {
 	canControl?: boolean;
 }
 
+/** Events emitted by {@link GroupListeningPlugin}. */
 export interface GroupListeningEvents {
 	'session:joined': { sessionId: string; participants: number };
 	'session:left': void;
@@ -57,6 +59,7 @@ export class GroupListeningPlugin extends Plugin<NMMusicPlayer<any>, GroupListen
 
 	private channel: IRealtimeChannel | null = null;
 
+	/** Opens the WebSocket channel and wires `before*` transport listeners to broadcast intent. */
 	override use(): void {
 		const url = this.opts?.wsUrl;
 		if (!url) {
@@ -93,6 +96,7 @@ export class GroupListeningPlugin extends Plugin<NMMusicPlayer<any>, GroupListen
 		}));
 	}
 
+	/** Closes the WebSocket channel and clears internal state. */
 	override dispose(): void {
 		try { this.channel?.close(); }
 		catch { /* already closed */ }
@@ -166,4 +170,5 @@ export class GroupListeningPlugin extends Plugin<NMMusicPlayer<any>, GroupListen
 	}
 }
 
+/** Plugin alias for {@link GroupListeningPlugin}. Pass to `addPlugin(groupListeningPlugin)`. */
 export const groupListeningPlugin = GroupListeningPlugin;
