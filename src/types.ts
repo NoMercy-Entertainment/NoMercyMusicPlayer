@@ -54,17 +54,8 @@ export enum ShuffleState {
 	ON = 'on',
 }
 
-/** Quality / bitrate selection mode. Returned by `player.qualityState()`. */
-export enum QualityState {
-	AUTO = 'auto',
-	MANUAL = 'manual',
-}
-
-/** Audio track selection mode. Returned by `player.audioTrackState()`. */
-export enum AudioTrackState {
-	DEFAULT = 'default',
-	MANUAL = 'manual',
-}
+/** Re-exported from kit — canonical definition lives in nomercy-player-core. */
+export { AudioTrackState, QualityState } from '@nomercy-entertainment/nomercy-player-core';
 
 /** Aggregated time state — re-exported from the kit. */
 export type { TimeState } from '@nomercy-entertainment/nomercy-player-core';
@@ -82,7 +73,7 @@ export interface MusicEventMap extends BaseEventMap {
 	'repeat': { state: RepeatState };
 	'shuffle': { state: ShuffleState };
 	'trackEndingSoon': { remaining: number; currentTrack: BasePlaylistItem };
-	'crossfadeStart': { from: BasePlaylistItem; to: BasePlaylistItem; duration: number };
+	'crossfadeStart': { from: BasePlaylistItem | null; to: BasePlaylistItem; duration: number };
 	'crossfadeComplete': { track: BasePlaylistItem };
 	'eq:change': { band: number; gain: number };
 }

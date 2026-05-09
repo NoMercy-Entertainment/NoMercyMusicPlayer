@@ -20,7 +20,6 @@ import type {
 	Chapter,
 	CueParser,
 	DeviceCapabilities,
-	IPlatform,
 	IPlayer,
 	TimeState as KitTimeState,
 	LoadOptions,
@@ -361,70 +360,19 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		return this._isTransitioning;
 	}
 
-	// ── State enums (music-specific — unimplemented) ──
-	private _qualityState: QualityState = QualityState.AUTO;
-	qualityState(): QualityState;
-	qualityState(target: number | 'auto'): void;
-	qualityState(target?: number | 'auto'): QualityState | void {
-		if (target === undefined)
-			return this._qualityState;
-		this._qualityState = target === 'auto' ? QualityState.AUTO : QualityState.MANUAL;
-		// Delegate the actual variant switch to the backend.
-		const b = this._backend as { setQuality?: (idx: number | 'auto') => void } | undefined;
-		b?.setQuality?.(target);
-		this.emit('qualityState' as any, { state: this._qualityState } as any);
-	}
-
-	private _audioTrackState: AudioTrackState = AudioTrackState.DEFAULT;
-	audioTrackState(): AudioTrackState;
-	audioTrackState(idx: number): void;
-	audioTrackState(idx?: number): AudioTrackState | void {
-		if (idx === undefined)
-			return this._audioTrackState;
-		this._audioTrackState = AudioTrackState.MANUAL;
-		const b = this._backend as { setAudioTrack?: (idx: number) => void } | undefined;
-		b?.setAudioTrack?.(idx);
-		this.emit('audioTrackState' as any, { state: this._audioTrackState } as any);
-	}
-
-	bufferState(): BufferState {
-		// Derive from backend state. Maps backend's 'idle/loading/seeking/stalled'
-		// onto the BufferState enum.
-		const backendState = (this._backend as { state?: () => string } | undefined)?.state?.();
-		switch (backendState) {
-			case 'loading': return BufferState.LOADING;
-			case 'seeking': return BufferState.SEEKING;
-			case 'stalled': return BufferState.STALLED;
-			default: return BufferState.IDLE;
-		}
-	}
-
-	networkState(): NetworkState {
-		const platform = (this as any).platform?.() as IPlatform | undefined;
-		const monitor = platform?.network;
-		if (!monitor)
-			return NetworkState.ONLINE;
-		if (!monitor.isOnline())
-			return NetworkState.OFFLINE;
-		const downlink = monitor.downlinkMbps?.();
-		if (typeof downlink === 'number' && downlink > 0 && downlink < 1.5)
-			return NetworkState.SLOW;
-		return NetworkState.ONLINE;
-	}
-
-	streamState(): string {
-		// Active stream factory id, or 'idle' if no stream is loaded yet.
-		const backend = this._backend as { state?: () => string } | undefined;
-		if (!backend)
-			return 'idle';
-		return backend.state?.() ?? 'idle';
-	}
-
-	visibilityState(): VisibilityState {
-		const platform = (this as any).platform?.() as IPlatform | undefined;
-		const visible = platform?.visibility?.isVisible() ?? true;
-		return visible ? VisibilityState.VISIBLE : VisibilityState.HIDDEN;
-	}
+	// ── Shared state methods ── composed in via `playerStateMethods` mixin.
+	declare bufferState: () => BufferState;
+	declare networkState: () => NetworkState;
+	declare streamState: () => string;
+	declare visibilityState: () => VisibilityState;
+	declare qualityState: {
+		(): QualityState;
+		(target: number | 'auto'): void;
+	};
+	declare audioTrackState: {
+		(): AudioTrackState;
+		(idx: number): void;
+	};
 
 	// ── Device capabilities ── composed in via `deviceMethods` mixin.
 	declare isTv: () => boolean;
