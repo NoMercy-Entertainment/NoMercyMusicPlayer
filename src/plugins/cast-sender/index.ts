@@ -1,0 +1,53 @@
+import { CastSenderPlugin as BaseCastSenderPlugin, translationsFromGlob } from '@nomercy-entertainment/nomercy-player-core';
+import type { ChromeCastMediaCtors, Translations } from '@nomercy-entertainment/nomercy-player-core';
+import type { NMMusicPlayer } from '../../index';
+import type { MusicPlaylistItem } from '../../types';
+
+export type { CastSenderEvents, CastSenderOptions } from '@nomercy-entertainment/nomercy-player-core';
+
+/**
+ * Music Cast sender — thin override of the kit's shared `CastSenderPlugin`.
+ * Specializes only the bits that differ between music and video:
+ *   - `'audio/mpeg'` default content type
+ *   - `MusicTrackMediaMetadata` builder reading `name` / `artist_track` /
+ *     `album_track` / `cover` from the music item shape.
+ *
+ * Translations are auto-discovered from the `./i18n/*.ts` folder. Each file
+ * default-exports its language bundle. Each plugin in the chain (kit base,
+ * this subclass) ships ONLY its own keys — the kit's plugin registration
+ * walks the prototype chain so both bundles end up in the table.
+ *
+ * Everything else — SDK probe, session lifecycle, RemotePlayer event
+ * mirroring, forward* helpers, resume-on-disconnect — lives in the kit.
+ */
+export class CastSenderPlugin extends BaseCastSenderPlugin<NMMusicPlayer<any>, MusicPlaylistItem> {
+	static override readonly id: string = 'cast-sender';
+	static override readonly description: string = 'Chromecast sender — full media bridge for music';
+	static override readonly translations: Translations = translationsFromGlob('./i18n/*.ts');
+
+	protected override defaultContentType(): string {
+		return 'audio/mpeg';
+	}
+
+	protected override async buildMetadata(
+		item: MusicPlaylistItem,
+		ctors: ChromeCastMediaCtors & { MusicTrackMediaMetadata?: new () => Record<string, unknown> },
+	): Promise<unknown> {
+		const Music = ctors.MusicTrackMediaMetadata ?? ctors.GenericMediaMetadata;
+		const meta = new Music() as Record<string, unknown>;
+		meta['title'] = item.name ?? '';
+		const artists = item.artist_track?.map(a => a?.name).filter(Boolean).join(', ') ?? '';
+		if (artists)
+			meta['artist'] = artists;
+		const album = item.album_track?.[0]?.name;
+		if (album)
+			meta['albumName'] = album;
+		if (item.cover) {
+			const cover = (await this.resolveUrl(item.cover, 'poster')).href;
+			meta['images'] = [{ url: cover }];
+		}
+		return meta;
+	}
+}
+
+export const castSenderPlugin = CastSenderPlugin;

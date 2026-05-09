@@ -132,10 +132,15 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	declare experimental: PlayerExperimental;
 
 	declare t: (key: string, vars?: Record<string, string>) => string;
-	declare language: () => string;
-	declare setLanguage: (lang: string) => Promise<void>;
+	declare language: {
+		(): string;
+		(lang: string): Promise<void>;
+	};
 	declare addTranslations: (bundle: Translations) => void;
-	declare setTranslation: (lang: string, key: string, value: string) => void;
+	declare translation: {
+		(lang: string, key: string): string | undefined;
+		(lang: string, key: string, value: string): void;
+	};
 	declare removeTranslations: (prefix: string, lang?: string) => void;
 
 	declare registerCueParser: (parser: CueParser, prepend?: boolean) => void;
@@ -210,9 +215,11 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	declare queueLength: () => number;
 	declare queueIndexOf: (id: string | number) => number;
 
-	declare current: () => T | undefined;
+	declare current: {
+		(): T | undefined;
+		(target: T | string | number, opts?: ActionOptions): void;
+	};
 	declare currentIndex: () => number;
-	declare setCurrent: (target: T | string | number, opts?: ActionOptions) => void;
 
 	declare backlog: {
 		(): ReadonlyArray<T>;
@@ -390,10 +397,10 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		this._backend = secondary;
 		this._secondary = undefined;
 
-		// Advance the cursor so `current()` reflects the new track. setCurrent
-		// emits the `current` event, which downstream plugins (mediaSession,
-		// lyrics, autoAdvance) listen to.
-		this.setCurrent?.(track.id ?? track);
+		// Advance the cursor so `current()` reflects the new track. The setter
+		// overload emits the `current` event, which downstream plugins
+		// (mediaSession, lyrics, autoAdvance) listen to.
+		this.current?.(track.id ?? track);
 
 		this._isTransitioning = false;
 		this.emit('crossfadeComplete' as any, { track } as any);
@@ -477,20 +484,40 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	// ── MediaCapabilities + ABR ── composed in via `abrMethods` mixin.
 	declare canPlay: (profile: { contentType: string; width?: number; height?: number; bitrate?: number; framerate?: number }) => Promise<MediaCapabilitiesDecodingInfo>;
 	declare bandwidth: () => number;
-	declare setBandwidthEstimator: (fn: () => number) => void;
+	declare bandwidthEstimator: {
+		(): (() => number) | undefined;
+		(fn: () => number): void;
+	};
 
 	// ── Audio output device ── composed in via `audioOutputMethods` mixin.
 	declare audioOutputs: () => Promise<MediaDeviceInfo[]>;
 	declare selectAudioOutput: () => Promise<MediaDeviceInfo | null>;
+	declare currentAudioOutput: {
+		(): Promise<string | null>;
+		(deviceId: string): Promise<void>;
+	};
 
 	// ── Tracks / chapters / quality ── composed in via `mediaTracksMethods` mixin.
 	declare subtitles: () => SubtitleTrack[];
-	declare setSubtitle: (idx: number | null) => void;
+	declare currentSubtitle: {
+		(): number | null;
+		(idx: number | null): void;
+	};
 	declare audioTracks: () => AudioTrack[];
-	declare setAudioTrack: (idx: number) => void;
+	declare currentAudioTrack: {
+		(): number | null;
+		(idx: number): void;
+	};
 	declare qualityLevels: () => QualityLevel[];
-	declare setQuality: (idx: number | 'auto') => void;
+	declare currentQuality: {
+		(): number | 'auto';
+		(idx: number | 'auto'): void;
+	};
 	declare chapters: () => Chapter[];
+	declare currentChapter: {
+		(): Chapter | null;
+		(idx: number): void;
+	};
 	declare seekToChapter: (idx: number, opts?: ActionOptions) => void;
 	declare nextChapter: (opts?: ActionOptions) => void;
 	declare previousChapter: (opts?: ActionOptions) => void;
@@ -500,18 +527,30 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	declare transferTo: (target: 'cast' | 'airplay' | 'remote-playback') => Promise<void>;
 
 	// ── Auth runtime mutation ── composed in via `authMethods` mixin.
-	declare setAuth: (config: AuthConfig) => void;
-	declare updateAuth: (partial: Partial<AuthConfig>) => void;
-	declare getAuth: () => Readonly<AuthConfig> | undefined;
+	declare auth: {
+		(): Readonly<AuthConfig> | undefined;
+		(config: AuthConfig): void;
+		(partial: Partial<AuthConfig>): void;
+	};
 	declare refreshAuth: () => Promise<void>;
 	declare resolveUrl: (url: string, category?: UrlCategory) => Promise<ResolvedUrl>;
-	declare setUrlResolver: (resolver: UrlResolver | undefined) => void;
+	declare urlResolver: {
+		(): UrlResolver | undefined;
+		(resolver: UrlResolver | undefined): void;
+	};
 
 	// ── Performance metrics / clock / accessibility ── composed in via `metricsMethods` mixin.
 	declare metrics: () => PlaybackMetrics;
 	declare recordMetric: (name: string, value: number) => void;
 	declare now: () => number;
 	declare announce: (text: string, level?: 'polite' | 'assertive') => void;
+
+	// ── DOM construction helpers ── composed via `domMethods` mixin.
+	declare createElement: IPlayer<MusicEventMap>['createElement'];
+	declare createButton: IPlayer<MusicEventMap>['createButton'];
+	declare createSVG: IPlayer<MusicEventMap>['createSVG'];
+	declare addClasses: IPlayer<MusicEventMap>['addClasses'];
+	declare removeClasses: IPlayer<MusicEventMap>['removeClasses'];
 }
 
 // Compose every shared player method onto the prototype. The kit's logic

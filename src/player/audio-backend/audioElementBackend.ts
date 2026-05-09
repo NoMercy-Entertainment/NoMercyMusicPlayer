@@ -1,6 +1,6 @@
 
 
-import { notImplementedError } from '@nomercy-entertainment/nomercy-player-core';
+import { BrowserPolicyError } from '@nomercy-entertainment/nomercy-player-core';
 import type { BackendEvent, BackendLoaderState, BackendState, IAudioBackend } from './backend';
 
 type Listener = (data?: any) => void;
@@ -37,11 +37,16 @@ export class AudioElementBackend implements IAudioBackend {
 	private readonly ownsElement: boolean;
 	private readonly container?: HTMLElement;
 	private readonly listeners: Map<string, Set<Listener>> = new Map();
-	private hlsInstance?: { destroy: () => void };
+	private hlsInstance?: { destroy: () => void; startLoad?: () => void; stopLoad?: () => void };
 	private currentState: BackendState = 'idle';
 	private prevVolume: number = 1;
 	private domHandlers: Map<string, EventListener> = new Map();
 	private disposed = false;
+	private sourceNode?: MediaElementAudioSourceNode;
+	private sourceCtx?: AudioContext;
+	private analyserNode?: AnalyserNode;
+	private outputGain?: GainNode;
+	private loaderRunning: BackendLoaderState = 'running';
 
 	constructor(container?: HTMLElement, opts?: { element?: HTMLAudioElement }) {
 		this.container = container;
@@ -282,12 +287,41 @@ export class AudioElementBackend implements IAudioBackend {
 		return this.currentState;
 	}
 
-	outputNode(_ctx: AudioContext): AudioNode {
-		throw notImplementedError('AudioElementBackend', 'outputNode');
+	outputNode(ctx: AudioContext): AudioNode {
+		this.ensureSourceGraph(ctx);
+		// `outputGain` is the consumer-facing tap — callers connect it to
+		// their own effect chain or directly to ctx.destination.
+		return this.outputGain!;
 	}
 
-	analyserSource(_ctx: AudioContext): AudioNode {
-		throw notImplementedError('AudioElementBackend', 'analyserSource');
+	analyserSource(ctx: AudioContext): AudioNode {
+		this.ensureSourceGraph(ctx);
+		return this.analyserNode!;
+	}
+
+	private ensureSourceGraph(ctx: AudioContext): void {
+		// Same context: reuse cached nodes.
+		if (this.sourceNode && this.sourceCtx === ctx) return;
+
+		// Different context (consumer swapped AudioContext) — drop the old
+		// graph; the previous source becomes garbage. createMediaElementSource
+		// permanently routes <audio> output through the graph, so a single
+		// element + single context is the only stable shape.
+		if (this.sourceNode && this.sourceCtx !== ctx) {
+			try { this.sourceNode.disconnect(); }
+			catch { /* defensive */ }
+			try { this.analyserNode?.disconnect(); }
+			catch { /* defensive */ }
+			try { this.outputGain?.disconnect(); }
+			catch { /* defensive */ }
+		}
+
+		this.sourceCtx = ctx;
+		this.sourceNode = ctx.createMediaElementSource(this.element);
+		this.analyserNode = ctx.createAnalyser();
+		this.outputGain = ctx.createGain();
+		this.sourceNode.connect(this.analyserNode);
+		this.analyserNode.connect(this.outputGain);
 	}
 
 	mediaElement(): HTMLMediaElement {
@@ -295,39 +329,78 @@ export class AudioElementBackend implements IAudioBackend {
 	}
 
 	captureStream(): MediaStream {
-		throw notImplementedError('AudioElementBackend', 'captureStream');
+		const fn = (this.element as HTMLAudioElement & { captureStream?: () => MediaStream }).captureStream;
+		if (typeof fn !== 'function') {
+			throw new BrowserPolicyError({
+				code: 'core:policy/captureStreamUnsupported',
+				severity: 'error',
+				scope: { kind: 'backend', id: 'audio-element' },
+				message: 'HTMLAudioElement.captureStream() is not available in this environment.',
+			});
+		}
+		return fn.call(this.element);
 	}
 
-	setSinkId(_deviceId: string): Promise<void> {
-		throw notImplementedError('AudioElementBackend', 'setSinkId');
+	async setSinkId(deviceId: string): Promise<void> {
+		const fn = (this.element as HTMLAudioElement & { setSinkId?: (id: string) => Promise<void> }).setSinkId;
+		if (typeof fn !== 'function') {
+			throw new BrowserPolicyError({
+				code: 'core:policy/setSinkIdUnsupported',
+				severity: 'error',
+				scope: { kind: 'backend', id: 'audio-element' },
+				message: 'HTMLAudioElement.setSinkId() is not available in this environment.',
+			});
+		}
+		await fn.call(this.element, deviceId);
 	}
 
 	getSinkId(): string {
-		throw notImplementedError('AudioElementBackend', 'getSinkId');
+		const v = (this.element as HTMLAudioElement & { sinkId?: string }).sinkId;
+		// Spec default is the empty string for the system default sink — preserve it.
+		return v ?? '';
 	}
 
 	mediaKeys(): MediaKeys | undefined {
-		throw notImplementedError('AudioElementBackend', 'mediaKeys');
+		// `MediaKeys` is on the element when EME has been wired; otherwise null.
+		return this.element.mediaKeys ?? undefined;
 	}
 
-	setMediaKeys(_keys: MediaKeys): Promise<void> {
-		throw notImplementedError('AudioElementBackend', 'setMediaKeys');
+	async setMediaKeys(keys: MediaKeys): Promise<void> {
+		const fn = (this.element as HTMLMediaElement & { setMediaKeys?: (k: MediaKeys) => Promise<void> }).setMediaKeys;
+		if (typeof fn !== 'function') {
+			throw new BrowserPolicyError({
+				code: 'core:policy/emeUnsupported',
+				severity: 'error',
+				scope: { kind: 'backend', id: 'audio-element' },
+				message: 'HTMLMediaElement.setMediaKeys() is not available in this environment.',
+			});
+		}
+		await fn.call(this.element, keys);
 	}
 
 	outputProtectionState(): 'unrestricted' | 'restricted' | 'unsupported' {
-		throw notImplementedError('AudioElementBackend', 'outputProtectionState');
+		// HTMLAudioElement doesn't expose HDCP / output-protection probes —
+		// audio sinks aren't HDCP-gated. Always 'unsupported' for this backend.
+		return 'unsupported';
 	}
 
 	pauseLoader(): void {
-		throw notImplementedError('AudioElementBackend', 'pauseLoader');
+		// HLS path: hand off to hls.js. Native HLS / progressive `<audio>` has
+		// no public throttle hook — the runtime tracks state for symmetry but
+		// can't actually halt the fetch.
+		const stop = this.hlsInstance?.stopLoad;
+		if (typeof stop === 'function') stop.call(this.hlsInstance);
+		this.loaderRunning = 'paused';
 	}
 
 	resumeLoader(): void {
-		throw notImplementedError('AudioElementBackend', 'resumeLoader');
+		const start = this.hlsInstance?.startLoad;
+		if (typeof start === 'function') start.call(this.hlsInstance);
+		this.loaderRunning = 'running';
 	}
 
 	loaderState(): BackendLoaderState {
-		throw notImplementedError('AudioElementBackend', 'loaderState');
+		return this.loaderRunning;
 	}
 
 	on(event: BackendEvent, fn: (data?: any) => void): void {
