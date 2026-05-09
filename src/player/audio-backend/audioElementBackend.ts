@@ -33,8 +33,8 @@ interface HlsCtor {
 export class AudioElementBackend implements IAudioBackend {
 	readonly kind = 'audio-element' as const;
 
-	private readonly element: HTMLAudioElement;
-	private readonly ownsElement: boolean;
+	private element: HTMLAudioElement;
+	private ownsElement: boolean;
 	private readonly container?: HTMLElement;
 	private readonly listeners: Map<string, Set<Listener>> = new Map();
 	private hlsInstance?: { destroy: () => void; startLoad?: () => void; stopLoad?: () => void };
@@ -47,6 +47,10 @@ export class AudioElementBackend implements IAudioBackend {
 	private analyserNode?: AnalyserNode;
 	private outputGain?: GainNode;
 	private loaderRunning: BackendLoaderState = 'running';
+
+	// ── Crossfade secondary ──────────────────────────────────────────────────
+	private _secondary?: HTMLAudioElement;
+	private _secondaryVol: number = 0;
 
 	constructor(container?: HTMLElement, opts?: { element?: HTMLAudioElement }) {
 		this.container = container;
@@ -72,6 +76,8 @@ export class AudioElementBackend implements IAudioBackend {
 	}
 
 	private attachDomBridges(): void {
+		this.domHandlers.clear();
+
 		const bridge = (domEvent: string, backendEvent: BackendEvent): void => {
 			const handler: EventListener = (ev): void => {
 				this.emit(backendEvent, ev);
@@ -104,6 +110,12 @@ export class AudioElementBackend implements IAudioBackend {
 		});
 		this.element.addEventListener('ended', () => setState('paused'));
 		this.element.addEventListener('error', () => setState('error'));
+	}
+
+	private detachDomBridges(el: HTMLAudioElement): void {
+		for (const [evt, handler] of this.domHandlers) {
+			el.removeEventListener(evt, handler);
+		}
 	}
 
 	private emit(event: string, data?: unknown): void {
@@ -177,6 +189,7 @@ export class AudioElementBackend implements IAudioBackend {
 	}
 
 	unload(): void {
+		this.disposeSecondary();
 		try { this.element.pause(); }
 		catch { /* ignore */ }
 		if (this.hlsInstance) {
@@ -193,6 +206,7 @@ export class AudioElementBackend implements IAudioBackend {
 	dispose(): void {
 		if (this.disposed) return;
 		this.disposed = true;
+		this.disposeSecondary();
 		this.unload();
 		for (const [evt, handler] of this.domHandlers) {
 			this.element.removeEventListener(evt, handler);
@@ -417,5 +431,169 @@ export class AudioElementBackend implements IAudioBackend {
 		if (!set) return;
 		set.delete(fn);
 		if (set.size === 0) this.listeners.delete(event);
+	}
+
+	// ── Crossfade ─────────────────────────────────────────────────────────────
+
+	/** Both `<audio>`-element backends can allocate a second element. */
+	supportsCrossfade(): boolean {
+		return true;
+	}
+
+	/**
+	 * Allocate a hidden secondary `<audio>` element and load `url` into it.
+	 * Does not affect primary playback. Idempotent when called with the same
+	 * URL that is already loaded on the secondary.
+	 *
+	 * NOTE: Dual-element fade is driven by a ~50 fps RAF loop and is NOT
+	 * sample-accurate. Expect sub-frame-length seams at the transition point.
+	 * Use `webAudioBackend` for sample-accurate crossfades.
+	 */
+	async loadSecondary(url: string): Promise<void> {
+		// Reuse when already loaded with the same URL.
+		if (this._secondary && this._secondary.currentSrc === url) return;
+
+		// Tear down any previous secondary.
+		this.disposeSecondary();
+
+		const el = document.createElement('audio');
+		el.preload = 'auto';
+		el.volume = 0;
+		el.style.display = 'none';
+		if (this.container) {
+			this.container.appendChild(el);
+		}
+		this._secondary = el;
+		this._secondaryVol = 0;
+
+		await new Promise<void>((resolve, reject) => {
+			const onMeta = (): void => { cleanup(); resolve(); };
+			const onErr = (): void => { cleanup(); reject(el.error ?? new Error('secondary load error')); };
+			const cleanup = (): void => {
+				el.removeEventListener('loadedmetadata', onMeta);
+				el.removeEventListener('error', onErr);
+			};
+			el.addEventListener('loadedmetadata', onMeta, { once: true });
+			el.addEventListener('error', onErr, { once: true });
+			el.src = url;
+			el.load();
+		});
+	}
+
+	/**
+	 * Pause + remove the secondary `<audio>` element from the DOM and clear
+	 * the reference. Idempotent.
+	 */
+	disposeSecondary(): void {
+		if (!this._secondary) return;
+		try { this._secondary.pause(); }
+		catch { /* ignore */ }
+		this._secondary.removeAttribute('src');
+		if (this._secondary.parentNode) {
+			this._secondary.parentNode.removeChild(this._secondary);
+		}
+		this._secondary = undefined;
+		this._secondaryVol = 0;
+	}
+
+	/**
+	 * Wait for the secondary to be ready to play, then optionally seek to
+	 * `seekMs`. Resolves immediately if `canplay` already fired.
+	 *
+	 * @param seekMs - Start position in milliseconds (default 0).
+	 */
+	async primeSecondary(seekMs?: number): Promise<void> {
+		const el = this._secondary;
+		if (!el) return;
+
+		await new Promise<void>((resolve) => {
+			if (el.readyState >= 3) {
+				resolve();
+				return;
+			}
+			el.addEventListener('canplay', () => resolve(), { once: true });
+		});
+
+		if (seekMs != null && seekMs > 0) {
+			el.currentTime = seekMs / 1000;
+		}
+	}
+
+	/**
+	 * Ramp primary volume → 0 and secondary volume → primary's pre-fade
+	 * volume over `durationMs`. Starts secondary playback at t = 0.
+	 * On completion the secondary `<audio>` element becomes the new primary;
+	 * the old primary element is disposed.
+	 *
+	 * @param durationMs - Crossfade duration in milliseconds. 0 = instant swap.
+	 */
+	async crossfade(durationMs: number): Promise<void> {
+		const secondary = this._secondary;
+		if (!secondary) throw new Error('crossfade() called without a loaded secondary');
+
+		const startVolume = this.element.volume;
+
+		secondary.volume = 0;
+		this._secondaryVol = 0;
+		await secondary.play();
+
+		await new Promise<void>((resolve) => {
+			if (durationMs <= 0) {
+				this.element.volume = 0;
+				secondary.volume = startVolume;
+				this._secondaryVol = startVolume;
+				resolve();
+				return;
+			}
+
+			const startTime = performance.now();
+			const tick = (): void => {
+				const elapsed = performance.now() - startTime;
+				const t = Math.min(1, elapsed / durationMs);
+
+				this.element.volume = startVolume * (1 - t);
+				secondary.volume = startVolume * t;
+				this._secondaryVol = secondary.volume;
+
+				if (t < 1) {
+					requestAnimationFrame(tick);
+				}
+				else {
+					resolve();
+				}
+			};
+			requestAnimationFrame(tick);
+		});
+
+		// Swap: old primary is silenced; secondary takes the primary slot.
+		const old = this.element;
+		this.detachDomBridges(old);
+		try { old.pause(); }
+		catch { /* ignore */ }
+		old.removeAttribute('src');
+		if (this.ownsElement && old.parentNode) {
+			old.parentNode.removeChild(old);
+		}
+
+		this.element = secondary;
+		this.ownsElement = true;
+		this._secondary = undefined;
+		this._secondaryVol = 0;
+
+		// Re-attach DOM bridges to the new primary element.
+		this.attachDomBridges();
+	}
+
+	secondaryGain(): number;
+	secondaryGain(value: number): void;
+	secondaryGain(value?: number): number | void {
+		if (value === undefined) {
+			return this._secondary ? this._secondary.volume : 0;
+		}
+		const clamped = Math.max(0, Math.min(1, value));
+		this._secondaryVol = clamped;
+		if (this._secondary) {
+			this._secondary.volume = clamped;
+		}
 	}
 }

@@ -97,4 +97,67 @@ export interface IAudioBackend {
 	// Events
 	on(event: BackendEvent, fn: (data?: any) => void): void;
 	off(event: BackendEvent, fn: (data?: any) => void): void;
+
+	// ── Crossfade ────────────────────────────────────────────────────────────
+
+	/**
+	 * Returns `true` when this backend supports parallel playback required for
+	 * crossfade. Both built-in backends return `true`. Custom backends that
+	 * cannot allocate a second playback handle should return `false`; the player
+	 * will throw `PlayerError('core:crossfade/unsupported')` rather than
+	 * attempting the transition.
+	 */
+	supportsCrossfade(): boolean;
+
+	/**
+	 * Allocate the secondary playback handle and begin loading `url` into it
+	 * without affecting primary playback. Safe to call multiple times with the
+	 * same URL — subsequent calls with an already-loaded URL are no-ops.
+	 *
+	 * @param url - Fully-resolved media URL for the incoming track.
+	 */
+	loadSecondary(url: string): Promise<void>;
+
+	/**
+	 * Tear down the secondary handle: pause, disconnect, and release all
+	 * resources. Idempotent — safe to call when no secondary is allocated.
+	 */
+	disposeSecondary(): void;
+
+	/**
+	 * Pre-roll the secondary so it is ready to play at `seekMs` (default 0).
+	 * Waits for the `canplay` event on the secondary element before resolving.
+	 *
+	 * @param seekMs - Start position in milliseconds.
+	 */
+	primeSecondary(seekMs?: number): Promise<void>;
+
+	/**
+	 * Atomic crossfade: ramp primary gain → 0 and secondary gain → the
+	 * player's current volume over `durationMs`. Starts secondary playback at
+	 * t = 0. On completion the secondary becomes the primary; the old primary
+	 * is disposed.
+	 *
+	 * NOTE (`audioElementBackend`): fade is driven by a requestAnimationFrame
+	 * loop at ~50 fps and is NOT sample-accurate. Expect sub-frame-length seams
+	 * at track boundaries. Use `webAudioBackend` for sample-accurate transitions.
+	 *
+	 * @param durationMs - Total crossfade duration in milliseconds. 0 = instant swap.
+	 */
+	crossfade(durationMs: number): Promise<void>;
+
+	/**
+	 * Read the secondary's current gain (0..1). Returns `0` when no secondary
+	 * is allocated. Intended for test introspection and advanced callers that
+	 * need to inspect mid-crossfade state.
+	 */
+	secondaryGain(): number;
+
+	/**
+	 * Write the secondary's gain directly (0..1). Clamped to [0, 1]. Has no
+	 * effect when no secondary is allocated.
+	 *
+	 * @param value - Target gain in the range [0, 1].
+	 */
+	secondaryGain(value: number): void;
 }

@@ -90,6 +90,8 @@ export interface MusicEventMap extends BaseEventMap {
 export interface CrossfadeOptions {
 	duration: number;
 	curve?: 'linear' | 'equal-power';
+	/** Start position of the incoming track in milliseconds (default 0). */
+	startAt?: number;
 }
 
 /** Backend selection at setup time. */

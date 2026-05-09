@@ -266,12 +266,10 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	declare getStreamFactory: (id: string) => StreamFactory | undefined;
 
 	// ── Backend ──
-	// Music keeps TWO audio backends to enable sample-accurate crossfade:
-	// `_backend` is the primary (currently audible) instance; `_secondary` is
-	// the lazily-mounted preload/crossfade target. `_isTransitioning` flips
-	// during a crossfade ramp.
+	// The active audio backend. `_isTransitioning` flips true during a crossfade
+	// so that simultaneous calls are rejected. The crossfade dual-buffer logic
+	// lives inside each backend implementation (loadSecondary / crossfade / etc.).
 	private _backend?: IAudioBackend;
-	private _secondary?: IAudioBackend;
 	private _isTransitioning = false;
 	backend(): IAudioBackend;
 	backend(kind: AudioBackendKind): Promise<void>;
@@ -287,10 +285,6 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 				this._backend.dispose();
 				this._backend = undefined;
 			}
-			if (this._secondary) {
-				this._secondary.dispose();
-				this._secondary = undefined;
-			}
 			if (kind === 'webaudio') {
 				this._backend = new WebAudioBackend(this.container);
 				this.emit('backend:changed' as any, { kind } as any);
@@ -299,17 +293,6 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 			this._backend = new AudioElementBackend(this.container);
 			this.emit('backend:changed' as any, { kind } as any);
 		});
-	}
-
-	/** Ensure the secondary backend exists. Lazy mount on first crossfade. */
-	private _ensureSecondary(): IAudioBackend {
-		if (!this._secondary) {
-			this._secondary = new AudioElementBackend(this.container);
-			// Secondary starts silent. Crossfade ramps it up while ramping
-			// primary down.
-			this._secondary.volume(0);
-		}
-		return this._secondary;
 	}
 
 	// ── Loading ── composed in via `loadingMethods` mixin.
@@ -330,9 +313,9 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	//   - track resolves to no URL → throws MediaFormatError.
 	async crossfadeTo(track: T, opts?: CrossfadeOptions & ActionOptions): Promise<void> {
 		if (this._isTransitioning)
-			return; // idempotent guard
+			return; // idempotent guard — reject stacked crossfades
 
-		const duration = (opts?.duration ?? this.options?.crossfadeDefaults?.duration ?? 5);
+		const durationMs = ((opts?.duration ?? this.options?.crossfadeDefaults?.duration ?? 5) * 1000);
 		const url = (track as { url?: string }).url;
 		if (!url) {
 			throw new MediaFormatError({
@@ -344,58 +327,26 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 			});
 		}
 
-		const primary = this.backend() as IAudioBackend;
+		const backend = this.backend();
 		const fromTrack = this.current?.() ?? null;
-		const targetVolume = primary.volume();
-
-		// Pre-load on the secondary slot (or reuse if `slot: 'next'` already
-		// preloaded the same URL — heuristic by URL match).
-		const secondary = this._ensureSecondary();
-		const alreadyLoaded = (secondary as unknown as { mediaElement?: () => HTMLMediaElement }).mediaElement?.()?.currentSrc === url;
-		if (!alreadyLoaded) {
-			await secondary.load(url, { preload: 'auto' });
-		}
-		secondary.volume(0);
-		await secondary.play();
 
 		this._isTransitioning = true;
 		this.emit('crossfadeStart' as any, {
 			from: fromTrack,
 			to: track,
-			duration,
+			duration: durationMs,
 		} as any);
 
-		// Ramp via setInterval. 50 ms ticks for ~20 fps gain updates — adequate
-		// for vocal-band crossfade, accurate enough to land on duration*1000 ms.
-		await new Promise<void>((resolve) => {
-			if (duration <= 0) {
-				primary.volume(0);
-				secondary.volume(targetVolume);
-				resolve();
-				return;
-			}
-			const tickMs = 50;
-			const totalSteps = Math.max(1, Math.floor((duration * 1000) / tickMs));
-			let step = 0;
-			const tick = setInterval(() => {
-				step += 1;
-				const t = Math.min(1, step / totalSteps);
-				primary.volume(targetVolume * (1 - t));
-				secondary.volume(targetVolume * t);
-				if (t >= 1) {
-					clearInterval(tick);
-					resolve();
-				}
-			}, tickMs);
-		});
-
-		// Swap: old primary unloads + disposes, secondary takes over.
 		try {
-			primary.dispose();
+			// Delegate all dual-buffer logic to the backend.
+			await backend.loadSecondary(url);
+			await backend.primeSecondary(opts?.startAt);
+			await backend.crossfade(durationMs);
 		}
-		catch { /* defensive */ }
-		this._backend = secondary;
-		this._secondary = undefined;
+		catch (err) {
+			this._isTransitioning = false;
+			throw err;
+		}
 
 		// Advance the cursor so `current()` reflects the new track. The setter
 		// overload emits the `current` event, which downstream plugins

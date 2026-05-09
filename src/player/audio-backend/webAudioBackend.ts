@@ -78,6 +78,14 @@ export class WebAudioBackend implements IAudioBackend {
 	private prevVolume: number = 1;
 	private disposed = false;
 
+	// ── Crossfade secondary ──────────────────────────────────────────────────
+	// Each crossfade allocates a fresh <audio> element + MediaElementAudioSourceNode
+	// pair because createMediaElementSource() permanently binds an element to a
+	// context — the same element cannot be reattached to a different source node.
+	private _secondaryEl?: HTMLAudioElement;
+	private _secondarySource?: MediaElementAudioSourceNode;
+	private _secondaryGain?: GainNode;
+
 	constructor(container?: HTMLElement, opts?: { audioContext?: AudioContext }) {
 		// Fail-fast: throw at construction if Web Audio is unavailable.
 		this.ctx = resolveAudioContext(opts?.audioContext);
@@ -237,6 +245,7 @@ export class WebAudioBackend implements IAudioBackend {
 	}
 
 	unload(): void {
+		this.disposeSecondary();
 		try { this.element.pause(); }
 		catch { /* ignore */ }
 		if (this.hlsInstance) {
@@ -253,6 +262,7 @@ export class WebAudioBackend implements IAudioBackend {
 	dispose(): void {
 		if (this.disposed) return;
 		this.disposed = true;
+		this.disposeSecondary();
 		this.unload();
 
 		// Disconnect the Web Audio graph.
@@ -509,5 +519,182 @@ export class WebAudioBackend implements IAudioBackend {
 		if (!set) return;
 		set.delete(fn);
 		if (set.size === 0) this.listeners.delete(event);
+	}
+
+	// ── Crossfade ─────────────────────────────────────────────────────────────
+
+	/** GainNode-based crossfade is sample-accurate via the Web Audio scheduler. */
+	supportsCrossfade(): boolean {
+		return true;
+	}
+
+	/**
+	 * Allocate a secondary `<audio>` element, wire it into the AudioContext via
+	 * a fresh `MediaElementAudioSourceNode` → `GainNode` → `ctx.destination`
+	 * chain, and begin loading `url`. Idempotent when called with the same URL.
+	 *
+	 * Each crossfade requires a new `<audio>` + `MediaElementAudioSourceNode`
+	 * pair because `createMediaElementSource()` permanently binds an element to
+	 * its context.
+	 *
+	 * @param url - Fully-resolved media URL for the incoming track.
+	 */
+	async loadSecondary(url: string): Promise<void> {
+		if (this._secondaryEl && this._secondaryEl.currentSrc === url) return;
+
+		this.disposeSecondary();
+
+		const el = document.createElement('audio');
+		el.preload = 'auto';
+		el.crossOrigin = 'anonymous';
+		el.style.display = 'none';
+		if (this.container) {
+			this.container.appendChild(el);
+		}
+
+		const gainNode = this.ctx.createGain();
+		gainNode.gain.value = 0;
+		const sourceNode = this.ctx.createMediaElementSource(el);
+		sourceNode.connect(gainNode);
+		gainNode.connect(this.ctx.destination);
+
+		this._secondaryEl = el;
+		this._secondarySource = sourceNode;
+		this._secondaryGain = gainNode;
+
+		await new Promise<void>((resolve, reject) => {
+			const onMeta = (): void => { cleanup(); resolve(); };
+			const onErr = (): void => { cleanup(); reject(el.error ?? new Error('secondary load error')); };
+			const cleanup = (): void => {
+				el.removeEventListener('loadedmetadata', onMeta);
+				el.removeEventListener('error', onErr);
+			};
+			el.addEventListener('loadedmetadata', onMeta, { once: true });
+			el.addEventListener('error', onErr, { once: true });
+			el.src = url;
+			el.load();
+		});
+	}
+
+	/**
+	 * Ramp the secondary's gain to 0 over 20 ms to avoid a click, then
+	 * disconnect and release all secondary resources. Idempotent.
+	 */
+	disposeSecondary(): void {
+		const gain = this._secondaryGain;
+		const source = this._secondarySource;
+		const el = this._secondaryEl;
+		if (!el) return;
+
+		if (gain) {
+			try {
+				const now = this.ctx.currentTime;
+				gain.gain.setTargetAtTime(0, now, 0.005);
+			}
+			catch { /* context may be closed */ }
+			try { gain.disconnect(); }
+			catch { /* ignore */ }
+		}
+		if (source) {
+			try { source.disconnect(); }
+			catch { /* ignore */ }
+		}
+
+		try { el.pause(); }
+		catch { /* ignore */ }
+		el.removeAttribute('src');
+		if (el.parentNode) {
+			el.parentNode.removeChild(el);
+		}
+
+		this._secondaryEl = undefined;
+		this._secondarySource = undefined;
+		this._secondaryGain = undefined;
+	}
+
+	/**
+	 * Wait for the secondary element to reach `readyState >= 3`, then
+	 * optionally seek to `seekMs`.
+	 *
+	 * @param seekMs - Start position in milliseconds (default 0).
+	 */
+	async primeSecondary(seekMs?: number): Promise<void> {
+		const el = this._secondaryEl;
+		if (!el) return;
+
+		await new Promise<void>((resolve) => {
+			if (el.readyState >= 3) {
+				resolve();
+				return;
+			}
+			el.addEventListener('canplay', () => resolve(), { once: true });
+		});
+
+		if (seekMs != null && seekMs > 0) {
+			el.currentTime = seekMs / 1000;
+		}
+	}
+
+	/**
+	 * Schedule a GainNode crossfade using the Web Audio clock. Primary gain
+	 * ramps to 0 and secondary gain ramps to the current primary volume over
+	 * `durationMs`. Starts secondary playback immediately.
+	 *
+	 * Uses `linearRampToValueAtTime` — sample-accurate per the Web Audio spec.
+	 *
+	 * @param durationMs - Crossfade duration in milliseconds. 0 = instant swap.
+	 */
+	async crossfade(durationMs: number): Promise<void> {
+		const secondaryEl = this._secondaryEl;
+		const secondaryGain = this._secondaryGain;
+		if (!secondaryEl || !secondaryGain) {
+			throw new Error('crossfade() called without a loaded secondary');
+		}
+
+		// Resume suspended context (autoplay policy).
+		if (this.ctx.state === 'suspended') {
+			await this.ctx.resume().catch(() => { /* best-effort */ });
+		}
+
+		const primaryGain = this.gainNode;
+		const targetVolume = primaryGain
+			? primaryGain.gain.value
+			: this.element.volume;
+
+		const now = this.ctx.currentTime;
+		const endTime = now + durationMs / 1000;
+
+		if (durationMs <= 0) {
+			if (primaryGain) primaryGain.gain.value = 0;
+			secondaryGain.gain.value = targetVolume;
+		}
+		else {
+			if (primaryGain) {
+				primaryGain.gain.cancelScheduledValues(now);
+				primaryGain.gain.setValueAtTime(primaryGain.gain.value, now);
+				primaryGain.gain.linearRampToValueAtTime(0, endTime);
+			}
+			secondaryGain.gain.cancelScheduledValues(now);
+			secondaryGain.gain.setValueAtTime(0, now);
+			secondaryGain.gain.linearRampToValueAtTime(targetVolume, endTime);
+		}
+
+		secondaryEl.play().catch(() => { /* best-effort — autoplay may block */ });
+
+		if (durationMs > 0) {
+			await new Promise<void>((resolve) => setTimeout(resolve, durationMs));
+		}
+	}
+
+	secondaryGain(): number;
+	secondaryGain(value: number): void;
+	secondaryGain(value?: number): number | void {
+		if (value === undefined) {
+			return this._secondaryGain ? this._secondaryGain.gain.value : 0;
+		}
+		const clamped = Math.max(0, Math.min(1, value));
+		if (this._secondaryGain) {
+			this._secondaryGain.gain.value = clamped;
+		}
 	}
 }
