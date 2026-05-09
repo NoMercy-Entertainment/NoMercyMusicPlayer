@@ -148,7 +148,7 @@ export class LyricsPlugin extends Plugin<NMMusicPlayer<any>, LyricsOptions> {
 				this.activeCue = undefined;
 			this.emit('lineExit', cue.payload);
 		});
-		tracker.attach(this.player as any);
+		tracker.attach(this.player as unknown as import('@nomercy-entertainment/nomercy-player-core').IPlayer<import('@nomercy-entertainment/nomercy-player-core').BaseEventMap>);
 	}
 }
 

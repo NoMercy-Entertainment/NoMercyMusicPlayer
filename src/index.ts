@@ -286,11 +286,11 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 			}
 			if (kind === 'webaudio') {
 				this._backend = new WebAudioBackend(this.container);
-				this.emit('backend:changed' as any, { kind } as any);
+				this.emit('backend:changed', { kind });
 				return;
 			}
 			this._backend = new AudioElementBackend(this.container);
-			this.emit('backend:changed' as any, { kind } as any);
+			this.emit('backend:changed', { kind });
 		});
 	}
 
@@ -330,11 +330,11 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		const fromTrack = this.current?.() ?? null;
 
 		this._isTransitioning = true;
-		this.emit('crossfadeStart' as any, {
+		this.emit('crossfadeStart', {
 			from: fromTrack,
 			to: track,
 			duration: durationMs,
-		} as any);
+		});
 
 		try {
 			// Delegate all dual-buffer logic to the backend.
@@ -353,7 +353,7 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		this.current?.(track.id ?? track);
 
 		this._isTransitioning = false;
-		this.emit('crossfadeComplete' as any, { track } as any);
+		this.emit('crossfadeComplete', { track });
 	}
 
 	isTransitioning(): boolean {

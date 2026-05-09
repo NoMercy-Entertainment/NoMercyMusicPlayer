@@ -62,7 +62,7 @@ export class DrmPlugin extends Plugin<NMMusicPlayer<any>, DrmOptions, DrmEvents>
 		}
 		this.supported = true;
 
-		this.on('current' as any, (data: any) => {
+		this.on('current', (data) => {
 			const item = data?.item as DrmTaggedItem | undefined;
 			if (!item?.drm)
 				return;

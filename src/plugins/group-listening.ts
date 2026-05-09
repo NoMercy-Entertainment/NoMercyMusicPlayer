@@ -70,23 +70,23 @@ export class GroupListeningPlugin extends Plugin<NMMusicPlayer<any>, GroupListen
 
 		// Broadcast intent on every transport before* event. Skip when the
 		// action originated from a remote-applied sync to avoid loops.
-		this.on('beforePlay' as any, (e: any) => this.broadcast({
+		this.on('beforePlay', (e) => this.broadcast({
 			action: 'play',
 			source: e?.data?.source,
 		}));
-		this.on('beforePause' as any, (e: any) => this.broadcast({
+		this.on('beforePause', (e) => this.broadcast({
 			action: 'pause',
 			source: e?.data?.source,
 		}));
-		this.on('beforeNext' as any, (e: any) => this.broadcast({
+		this.on('beforeNext', (e) => this.broadcast({
 			action: 'next',
 			source: e?.data?.source,
 		}));
-		this.on('beforePrevious' as any, (e: any) => this.broadcast({
+		this.on('beforePrevious', (e) => this.broadcast({
 			action: 'previous',
 			source: e?.data?.source,
 		}));
-		this.on('beforeSeek' as any, (e: any) => this.broadcast({
+		this.on('beforeSeek', (e) => this.broadcast({
 			action: 'seek',
 			time: e?.data?.time,
 			source: e?.data?.source,

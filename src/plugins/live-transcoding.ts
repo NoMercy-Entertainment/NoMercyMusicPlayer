@@ -64,7 +64,7 @@ export class LiveTranscodingPlugin extends Plugin<NMMusicPlayer<any>, LiveTransc
 		this.channel.on('message', this.handleMessage);
 
 		// Gate beforeLoad / beforeSeek if the requested time isn't ready yet.
-		this.on('beforeLoad' as any, (e: any) => {
+		this.on('beforeLoad', (e) => {
 			// `beforeLoad` carries an item; the start position is 0 unless an
 			// upstream plugin populated `startAt`. We treat it as time=0 here
 			// — the kit's load path applies `startAt` after we resolve.
@@ -74,7 +74,7 @@ export class LiveTranscodingPlugin extends Plugin<NMMusicPlayer<any>, LiveTransc
 			e.delay(this.waitForReady(startAt));
 		});
 
-		this.on('beforeSeek' as any, (e: any) => {
+		this.on('beforeSeek', (e) => {
 			const time = (e?.data as { time?: number } | undefined)?.time;
 			if (typeof time !== 'number')
 				return;

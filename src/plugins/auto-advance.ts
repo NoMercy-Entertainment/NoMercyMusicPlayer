@@ -55,7 +55,7 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOpt
 
 	/** Force-advance to the next track immediately, regardless of `ended` state. */
 	advance(): Promise<void> {
-		return this.player.next({ source: 'auto-advance' as any });
+		return this.player.next({ source: 'auto-advance' });
 	}
 
 	/**
@@ -93,7 +93,7 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOpt
 		if (this.opts?.enabled === false)
 			return;
 		try {
-			await this.player.next({ source: 'auto-advance' as any });
+			await this.player.next({ source: 'auto-advance' });
 		}
 		catch (err) {
 			this.logger.warn('next() failed on ended', err);
@@ -117,7 +117,7 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOpt
 
 		if (this.opts?.crossfade === true && next) {
 			try {
-				await this.player.crossfadeTo(next as any, { duration });
+				await this.player.crossfadeTo(next, { duration });
 			}
 			catch (err) {
 				this.logger.warn('crossfadeTo failed', err);
