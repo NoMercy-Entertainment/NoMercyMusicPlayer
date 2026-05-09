@@ -1,17 +1,14 @@
-
-
 import {
+	AudioGraphPlugin,
+	BufferState,
 	composeMixins,
+	EqualizerPlugin,
 	EventEmitter,
 	initPlayerCoreState,
-	notImplementedError,
+	MediaFormatError,
+	NetworkState,
 	playerCoreMethods,
 	resolvePlayerConstructor,
-} from '@nomercy-entertainment/nomercy-player-core';
-import {
-	BufferState,
-	CastState,
-	NetworkState,
 	VisibilityState,
 } from '@nomercy-entertainment/nomercy-player-core';
 import type {
@@ -19,20 +16,27 @@ import type {
 	AudioTrack,
 	AuthConfig,
 	BasePlaylistItem,
+	CastState,
 	Chapter,
 	CueParser,
 	DeviceCapabilities,
+	IPlatform,
 	IPlayer,
+	TimeState as KitTimeState,
 	LoadOptions,
 	PlaybackMetrics,
 	PlayerExperimental,
 	PlayerPhase,
 	Plugin,
 	QualityLevel,
+	ResolvedUrl,
+	SetupState,
 	StreamFactory,
 	SubtitleTrack,
-	TimeState as KitTimeState,
 	Translations,
+
+	UrlCategory,
+	UrlResolver,
 } from '@nomercy-entertainment/nomercy-player-core';
 import type { IAudioBackend } from './player/audio-backend/backend';
 import { AudioElementBackend } from './player/audio-backend/audioElementBackend';
@@ -43,15 +47,24 @@ import type {
 	MusicEventMap,
 	MusicPlayerConfig,
 	MusicPlaylistItem,
-} from './types';
-import {
-	AudioTrackState,
+
 	PlayState,
-	QualityState,
 	RepeatState,
 	ShuffleState,
 	VolumeState,
 } from './types';
+import {
+	AudioTrackState,
+	QualityState,
+} from './types';
+import {
+	AutoAdvancePlugin,
+	CastSenderPlugin,
+	KeyHandlerPlugin,
+	LyricsPlugin,
+	MediaSessionPlugin,
+	TabLeaderPlugin,
+} from './plugins';
 
 export type {
 	AudioBackendKind,
@@ -71,8 +84,6 @@ export {
 } from './types';
 
 const _instances = new Map<string, NMMusicPlayer<any>>();
-
-const notImplemented = (method: string): Error => notImplementedError('NMMusicPlayer', method);
 
 /**
  * Headless music player. Plugin-driven, event-driven, no UI in core.
@@ -108,7 +119,7 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	declare setup: (config: MusicPlayerConfig<T>) => this;
 	declare ready: () => Promise<void>;
 	declare dispose: () => void;
-	declare setupState: () => import('@nomercy-entertainment/nomercy-player-core').SetupState;
+	declare setupState: () => SetupState;
 	declare phase: () => PlayerPhase;
 	declare dispatching: () => ReadonlyArray<string>;
 
@@ -116,6 +127,7 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		(): string | undefined;
 		(url: string): void;
 	};
+
 	declare audioContext: () => AudioContext | undefined;
 	declare experimental: PlayerExperimental;
 
@@ -143,6 +155,7 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		(): number;
 		(t: number, opts?: ActionOptions): Promise<void>;
 	};
+
 	declare duration: () => number;
 	declare buffered: () => number;
 	declare bufferedRanges: () => TimeRanges;
@@ -152,12 +165,14 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		(): number;
 		(rate: number): void;
 	};
+
 	declare playbackRates: () => number[];
 
 	declare volume: {
 		(): number;
 		(v: number): void;
 	};
+
 	declare mute: () => void;
 	declare unmute: () => void;
 	declare toggleMute: () => void;
@@ -170,6 +185,7 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		(): RepeatState;
 		(state: RepeatState): void;
 	};
+
 	declare shuffleState: {
 		(): ShuffleState;
 		(state: ShuffleState | boolean): void;
@@ -179,6 +195,7 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		(): ReadonlyArray<T>;
 		(items: T[], opts?: ActionOptions): void;
 	};
+
 	declare queueAppend: (item: T | T[], opts?: ActionOptions) => void;
 	declare queuePrepend: (item: T | T[], opts?: ActionOptions) => void;
 	declare queueInsert: (item: T | T[], index: number, opts?: ActionOptions) => void;
@@ -201,11 +218,12 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		(): ReadonlyArray<T>;
 		(items: T[]): void;
 	};
+
 	declare backlogAppend: (item: T | T[]) => void;
 	declare backlogRemove: (id: string | number) => void;
 	declare backlogClear: () => void;
 
-	declare addPlugin: <P extends Plugin>(PluginClass: new () => P, opts?: unknown) => this;
+	declare addPlugin: <P extends Plugin>(PluginClass: new () => P, opts?: P['opts']) => this;
 	declare getPlugin: <P extends Plugin>(PluginClass: new () => P) => P | undefined;
 	declare getPluginById: (id: string) => Plugin | undefined;
 	declare removePlugin: <P extends Plugin>(PluginClass: new () => P) => void;
@@ -220,7 +238,6 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		// fully constructed and possibly mid-pipeline.
 		const resolved = resolvePlayerConstructor(id, _instances, 'NMMusicPlayer');
 		if (resolved.kind === 'existing') {
-			// eslint-disable-next-line no-constructor-return
 			return resolved.instance as unknown as this;
 		}
 
@@ -305,15 +322,22 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	//   - duration <= 0 → instant swap, no ramp.
 	//   - track resolves to no URL → throws MediaFormatError.
 	async crossfadeTo(track: T, opts?: CrossfadeOptions & ActionOptions): Promise<void> {
-		if (this._isTransitioning) return; // idempotent guard
+		if (this._isTransitioning)
+			return; // idempotent guard
 
 		const duration = (opts?.duration ?? this.options?.crossfadeDefaults?.duration ?? 5);
 		const url = (track as { url?: string }).url;
 		if (!url) {
-			throw notImplementedError('NMMusicPlayer', 'crossfadeTo(item without url)');
+			throw new MediaFormatError({
+				code: 'core:media/missing-url',
+				severity: 'error',
+				scope: { kind: 'core' },
+				message: 'crossfadeTo(track) requires `track.url` to be present.',
+				context: { id: (track as { id?: string | number }).id },
+			});
 		}
 
-		const primary = (this.backend() as IAudioBackend);
+		const primary = this.backend() as IAudioBackend;
 		const fromTrack = this.current?.() ?? null;
 		const targetVolume = primary.volume();
 
@@ -328,7 +352,11 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		await secondary.play();
 
 		this._isTransitioning = true;
-		this.emit('crossfadeStart' as any, { from: fromTrack, to: track, duration } as any);
+		this.emit('crossfadeStart' as any, {
+			from: fromTrack,
+			to: track,
+			duration,
+		} as any);
 
 		// Ramp via setInterval. 50 ms ticks for ~20 fps gain updates — adequate
 		// for vocal-band crossfade, accurate enough to land on duration*1000 ms.
@@ -355,7 +383,10 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		});
 
 		// Swap: old primary unloads + disposes, secondary takes over.
-		try { primary.dispose(); } catch { /* defensive */ }
+		try {
+			primary.dispose();
+		}
+		catch { /* defensive */ }
 		this._backend = secondary;
 		this._secondary = undefined;
 
@@ -377,23 +408,27 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	qualityState(): QualityState;
 	qualityState(target: number | 'auto'): void;
 	qualityState(target?: number | 'auto'): QualityState | void {
-		if (target === undefined) return this._qualityState;
+		if (target === undefined)
+			return this._qualityState;
 		this._qualityState = target === 'auto' ? QualityState.AUTO : QualityState.MANUAL;
 		// Delegate the actual variant switch to the backend.
 		const b = this._backend as { setQuality?: (idx: number | 'auto') => void } | undefined;
 		b?.setQuality?.(target);
 		this.emit('qualityState' as any, { state: this._qualityState } as any);
 	}
+
 	private _audioTrackState: AudioTrackState = AudioTrackState.DEFAULT;
 	audioTrackState(): AudioTrackState;
 	audioTrackState(idx: number): void;
 	audioTrackState(idx?: number): AudioTrackState | void {
-		if (idx === undefined) return this._audioTrackState;
+		if (idx === undefined)
+			return this._audioTrackState;
 		this._audioTrackState = AudioTrackState.MANUAL;
 		const b = this._backend as { setAudioTrack?: (idx: number) => void } | undefined;
 		b?.setAudioTrack?.(idx);
 		this.emit('audioTrackState' as any, { state: this._audioTrackState } as any);
 	}
+
 	bufferState(): BufferState {
 		// Derive from backend state. Maps backend's 'idle/loading/seeking/stalled'
 		// onto the BufferState enum.
@@ -405,23 +440,30 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 			default: return BufferState.IDLE;
 		}
 	}
+
 	networkState(): NetworkState {
-		const platform = (this as any).platform?.() as import('@nomercy-entertainment/nomercy-player-core').IPlatform | undefined;
+		const platform = (this as any).platform?.() as IPlatform | undefined;
 		const monitor = platform?.network;
-		if (!monitor) return NetworkState.ONLINE;
-		if (!monitor.isOnline()) return NetworkState.OFFLINE;
+		if (!monitor)
+			return NetworkState.ONLINE;
+		if (!monitor.isOnline())
+			return NetworkState.OFFLINE;
 		const downlink = monitor.downlinkMbps?.();
-		if (typeof downlink === 'number' && downlink > 0 && downlink < 1.5) return NetworkState.SLOW;
+		if (typeof downlink === 'number' && downlink > 0 && downlink < 1.5)
+			return NetworkState.SLOW;
 		return NetworkState.ONLINE;
 	}
+
 	streamState(): string {
 		// Active stream factory id, or 'idle' if no stream is loaded yet.
 		const backend = this._backend as { state?: () => string } | undefined;
-		if (!backend) return 'idle';
+		if (!backend)
+			return 'idle';
 		return backend.state?.() ?? 'idle';
 	}
+
 	visibilityState(): VisibilityState {
-		const platform = (this as any).platform?.() as import('@nomercy-entertainment/nomercy-player-core').IPlatform | undefined;
+		const platform = (this as any).platform?.() as IPlatform | undefined;
 		const visible = platform?.visibility?.isVisible() ?? true;
 		return visible ? VisibilityState.VISIBLE : VisibilityState.HIDDEN;
 	}
@@ -462,6 +504,8 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	declare updateAuth: (partial: Partial<AuthConfig>) => void;
 	declare getAuth: () => Readonly<AuthConfig> | undefined;
 	declare refreshAuth: () => Promise<void>;
+	declare resolveUrl: (url: string, category?: UrlCategory) => Promise<ResolvedUrl>;
+	declare setUrlResolver: (resolver: UrlResolver | undefined) => void;
 
 	// ── Performance metrics / clock / accessibility ── composed in via `metricsMethods` mixin.
 	declare metrics: () => PlaybackMetrics;
@@ -484,8 +528,37 @@ composeMixins(NMMusicPlayer.prototype, ...playerCoreMethods);
  *   .addPlugin(equalizerPlugin);
  * ```
  */
-export const nmMPlayer = <T extends BasePlaylistItem = MusicPlaylistItem>(id?: string | number): NMMusicPlayer<T> => {
+export function nmMPlayer<T extends BasePlaylistItem = MusicPlaylistItem>(id?: string | number): NMMusicPlayer<T> {
 	return new NMMusicPlayer<T>(id);
-};
+}
 
 export default nmMPlayer;
+
+// interface MyTrack extends MusicPlaylistItem {
+// 	readonly: string;
+// }
+//
+// const player = nmMPlayer<MyTrack>('player')
+// 	.setup({
+// 		accessToken: () => {
+// 			return 'token';
+// 		},
+// 	})
+// 	.addPlugin(CastSenderPlugin)
+// 	.addPlugin(KeyHandlerPlugin)
+// 	.addPlugin(LyricsPlugin)
+// 	.addPlugin(MediaSessionPlugin)
+// 	.addPlugin(AutoAdvancePlugin)
+// 	.addPlugin(AudioGraphPlugin)
+// 	.addPlugin(EqualizerPlugin, {
+//
+// 	})
+// 	.addPlugin(TabLeaderPlugin, {
+// 		getLockKey: () => ``,
+// 		handoffOnVisible: true,
+// 		onLost: 'pause',
+// 	});
+//
+// player.on('all', (event) => {
+// 	console.log(`Event: ${event.type}`, event);
+// });
