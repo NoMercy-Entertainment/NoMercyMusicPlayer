@@ -29,15 +29,6 @@ export interface GroupListeningEvents {
 	'unsupported': { reason: string };
 }
 
-/** Loose surface for transport methods we forward remote actions to. */
-interface PlayerSurface {
-	play?: (opts?: unknown) => unknown;
-	pause?: (opts?: unknown) => unknown;
-	next?: (opts?: unknown) => unknown;
-	previous?: (opts?: unknown) => unknown;
-	currentTime?: ((t?: number) => number | unknown) | (() => number);
-}
-
 /** Wire-format for the broadcast/apply protocol. */
 interface SyncMessage {
 	action: 'play' | 'pause' | 'seek' | 'next' | 'previous';
@@ -133,35 +124,21 @@ export class GroupListeningPlugin extends Plugin<NMMusicPlayer<any>, GroupListen
 	};
 
 	private applyRemote(msg: SyncMessage): void {
-		const surface = this.player as unknown as PlayerSurface;
-		const tag = {
-			source: 'remote' as const,
-			silent: true,
-		};
+		const tag = { source: 'remote' as const, silent: true };
+
 		switch (msg.action) {
-			case 'play':
-				void surface.play?.(tag);
-				break;
-			case 'pause':
-				void surface.pause?.(tag);
-				break;
-			case 'next':
-				void surface.next?.(tag);
-				break;
-			case 'previous':
-				void surface.previous?.(tag);
-				break;
+			case 'play':    void this.player.play?.(tag);     break;
+			case 'pause':   void this.player.pause?.(tag);    break;
+			case 'next':    void this.player.next?.(tag);     break;
+			case 'previous': void this.player.previous?.(tag); break;
 			case 'seek': {
-				if (typeof msg.time !== 'number')
-					return;
-				const ct = surface.currentTime as ((t: number) => unknown) | undefined;
-				if (typeof ct === 'function') {
-					try { (ct as (t: number) => unknown).call(surface, msg.time); }
-					catch { /* setter unsupported on this surface — drop. */ }
+				if (typeof msg.time === 'number') {
+					void this.player.currentTime?.(msg.time);
 				}
 				break;
 			}
 		}
+
 		this.emit('sync:applied', {
 			source: 'remote',
 			action: msg.action,

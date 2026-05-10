@@ -2,13 +2,6 @@ import { KeyHandlerPlugin as BaseKeyHandler } from '@nomercy-entertainment/nomer
 import type { NMMusicPlayer } from '../index';
 import { RepeatState, ShuffleState } from '../types';
 
-/** Loose surface for music transport methods we read off the player. */
-interface MusicSurface {
-	next?: () => unknown;
-	previous?: () => unknown;
-	repeatState?: ((state?: RepeatState) => RepeatState | unknown);
-	shuffleState?: ((state?: ShuffleState | boolean) => ShuffleState | unknown);
-}
 
 /**
  * Music-specific key handler. Inherits all kit defaults (space=play/pause,
@@ -25,32 +18,25 @@ export class KeyHandlerPlugin extends BaseKeyHandler<NMMusicPlayer<any>> {
 	/** Only override `addMediaKeys` — kit's default playback / nav / volume groups carry over. */
 	protected override addMediaKeys(): void {
 		super.addMediaKeys();
-		const surface = (): MusicSurface => this.player as unknown as MusicSurface;
 
-		this.bind('n', () => { void surface().next?.(); });
-		this.bind('p', () => { void surface().previous?.(); });
+		this.bind('n', () => { void this.player.next?.(); });
+		this.bind('p', () => { void this.player.previous?.(); });
 
 		this.bind('r', () => {
-			const s = surface();
-			if (typeof s.repeatState !== 'function')
-				return;
-			const current = s.repeatState() as RepeatState | undefined;
-			const nextState
+			const current = this.player.repeatState?.();
+			const next
 				= current === RepeatState.OFF
 					? RepeatState.ALL
 					: current === RepeatState.ALL
 						? RepeatState.ONE
 						: RepeatState.OFF;
-			(s.repeatState as (state: RepeatState) => unknown)(nextState);
+			this.player.repeatState?.(next);
 		});
 
 		this.bind('s', () => {
-			const s = surface();
-			if (typeof s.shuffleState !== 'function')
-				return;
-			const current = s.shuffleState() as ShuffleState | undefined;
-			const nextState = current === ShuffleState.ON ? ShuffleState.OFF : ShuffleState.ON;
-			(s.shuffleState as (state: ShuffleState) => unknown)(nextState);
+			const current = this.player.shuffleState?.();
+			const next = current === ShuffleState.ON ? ShuffleState.OFF : ShuffleState.ON;
+			this.player.shuffleState?.(next);
 		});
 	}
 }

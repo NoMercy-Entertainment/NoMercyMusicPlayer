@@ -3,7 +3,6 @@ import type {
 	Cue,
 	CueList,
 	CueParser,
-	CueParserRegistry,
 } from '@nomercy-entertainment/nomercy-player-core';
 import type { NMMusicPlayer } from '../index';
 import type { MusicPlaylistItem } from '../types';
@@ -132,8 +131,7 @@ export class LyricsPlugin extends Plugin<NMMusicPlayer<any>, LyricsOptions> {
 	}
 
 	private resolveParser(url: string): CueParser | undefined {
-		const registry = (this.player as unknown as { _cueParsers?: CueParserRegistry })._cueParsers;
-		return registry?.resolve(url);
+		return this.player.resolveCueParser(url);
 	}
 
 	private attach(list: CueList<LyricPayload>): void {
@@ -151,7 +149,7 @@ export class LyricsPlugin extends Plugin<NMMusicPlayer<any>, LyricsOptions> {
 				this.activeCue = undefined;
 			this.emit('lineExit', cue.payload);
 		});
-		tracker.attach(this.player as unknown as import('@nomercy-entertainment/nomercy-player-core').IPlayer<import('@nomercy-entertainment/nomercy-player-core').BaseEventMap>);
+		tracker.attach(this.player);
 	}
 }
 
