@@ -1,4 +1,5 @@
 import { Plugin } from '@nomercy-entertainment/nomercy-player-core';
+import type { BasePlayerConfig, IPlayer } from '@nomercy-entertainment/nomercy-player-core';
 import type { NMMusicPlayer } from '../index';
 import type { MusicPlaylistItem } from '../types';
 
@@ -99,7 +100,8 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOpt
 		// The kit's base-player handles queue advancement on ended when
 		// autoAdvance !== false (the default). This plugin only needs to
 		// drive next() itself when the consumer has disabled kit auto-advance.
-		const kitHandles = (this.player as any).options?.autoAdvance !== false;
+		const playerWithOpts = this.player as IPlayer<any> & { options?: BasePlayerConfig & { autoAdvance?: boolean } };
+		const kitHandles = playerWithOpts.options?.autoAdvance !== false;
 		if (!kitHandles) {
 			try {
 				await this.player.next({ source: 'auto-advance' });
