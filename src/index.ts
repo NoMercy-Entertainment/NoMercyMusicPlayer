@@ -279,6 +279,7 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		if (kind === undefined) {
 			if (!this._backend) {
 				this._backend = new AudioElementBackend(this.container);
+				this._wireBackend(this._backend);
 			}
 			return this._backend;
 		}
@@ -289,11 +290,68 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 			}
 			if (kind === 'webaudio') {
 				this._backend = new WebAudioBackend(this.container);
-				this.emit('backend:changed', { kind });
-				return;
 			}
-			this._backend = new AudioElementBackend(this.container);
+			else {
+				this._backend = new AudioElementBackend(this.container);
+			}
+			this._wireBackend(this._backend);
 			this.emit('backend:changed', { kind });
+		});
+	}
+
+	private _firstFrameEmitted = false;
+	private _wireBackend(instance: IAudioBackend): void {
+		this._firstFrameEmitted = false;
+		const self = this as unknown as { _phase: string; _playState: string; emit: (e: string, d?: unknown) => void };
+
+		instance.on('canplay', () => {
+			if (this._firstFrameEmitted) return;
+			this._firstFrameEmitted = true;
+			if (self._phase === 'starting') {
+				const from = self._phase;
+				self._phase = 'playing';
+				this.emit('phase', { from, to: 'playing' });
+			}
+			this.emit('firstFrame', undefined);
+		});
+
+		instance.on('play', () => {
+			if (self._playState !== 'playing') {
+				self._playState = 'playing';
+				this.emit('play', undefined);
+			}
+		});
+		instance.on('pause', () => {
+			if (self._playState === 'playing') {
+				self._playState = 'paused';
+				this.emit('pause', undefined);
+			}
+		});
+
+		instance.on('ended', () => {
+			const from = self._phase;
+			if (from !== 'ended') {
+				self._phase = 'ended';
+				this.emit('phase', { from, to: 'ended' });
+			}
+			this.emit('ended', undefined);
+		});
+
+		const onResetToPaused = () => {
+			this._firstFrameEmitted = false;
+			if (self._playState === 'playing') {
+				self._playState = 'paused';
+				this.emit('pause', undefined);
+			}
+		};
+		instance.on('loadstart', onResetToPaused);
+
+		instance.on('timeupdate', () => {
+			this.emit('time', { time: instance.currentTime() });
+		});
+		instance.on('loadedmetadata', (data?: { duration: number }) => {
+			if (!data) return;
+			this.emit('duration', { duration: data.duration });
 		});
 	}
 
