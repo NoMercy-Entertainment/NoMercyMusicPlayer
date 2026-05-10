@@ -95,12 +95,20 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOpt
 	private async onEnded(): Promise<void> {
 		if (this.opts?.enabled === false)
 			return;
-		try {
-			await this.player.next({ source: 'auto-advance' });
+
+		// The kit's base-player handles queue advancement on ended when
+		// autoAdvance !== false (the default). This plugin only needs to
+		// drive next() itself when the consumer has disabled kit auto-advance.
+		const kitHandles = (this.player as any).options?.autoAdvance !== false;
+		if (!kitHandles) {
+			try {
+				await this.player.next({ source: 'auto-advance' });
+			}
+			catch (err) {
+				this.logger.warn('next() failed on ended', err);
+			}
 		}
-		catch (err) {
-			this.logger.warn('next() failed on ended', err);
-		}
+
 		for (const fn of this.endedHandlers) {
 			try { await fn(); }
 			catch (err) { this.logger.warn('ended handler threw', err); }
