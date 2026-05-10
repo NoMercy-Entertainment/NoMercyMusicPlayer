@@ -520,6 +520,10 @@ composeMixins(NMMusicPlayer.prototype, ...playerCoreMethods);
 /**
  * Factory entry point.
  *
+ * When `setup({ expose: true })` is called on the returned instance,
+ * `window.nmMPlayer` is set to this factory for console access alongside
+ * `window.player` (wired by the kit). Cleaned up on `dispose()`.
+ *
  * ```ts
  * const player = nmMPlayer<MyTrack>('player')
  *   .setup({ ... })
@@ -528,7 +532,25 @@ composeMixins(NMMusicPlayer.prototype, ...playerCoreMethods);
  * ```
  */
 export function nmMPlayer<T extends BasePlaylistItem = MusicPlaylistItem>(id?: string | number): NMMusicPlayer<T> {
-	return new NMMusicPlayer<T>(id);
+	const instance = new NMMusicPlayer<T>(id);
+
+	const originalSetup = instance.setup.bind(instance);
+	instance.setup = function (config: MusicPlayerConfig<T>): NMMusicPlayer<T> {
+		const result = originalSetup(config);
+		if (config.expose === true && typeof window !== 'undefined') {
+			Object.assign(window, { nmMPlayer });
+			const originalDispose = instance.dispose.bind(instance);
+			instance.dispose = function (): void {
+				if (Object.is(Reflect.get(window, 'nmMPlayer'), nmMPlayer)) {
+					Reflect.deleteProperty(window, 'nmMPlayer');
+				}
+				originalDispose();
+			};
+		}
+		return result;
+	};
+
+	return instance;
 }
 
 export default nmMPlayer;
