@@ -517,6 +517,18 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 // gets wired into the class here — no inheritance, no per-library duplication.
 composeMixins(NMMusicPlayer.prototype, ...playerCoreMethods);
 
+{
+	const composedDispose = NMMusicPlayer.prototype.dispose as () => void;
+	NMMusicPlayer.prototype.dispose = function (this: NMMusicPlayer<BasePlaylistItem>): void {
+		const self = this as unknown as { _backend?: { dispose?: () => void } };
+		try { self._backend?.dispose?.(); }
+		catch { /* defensive — kit must still finish disposing */ }
+		self._backend = undefined;
+		_instances.delete(this.playerId);
+		composedDispose.call(this);
+	};
+}
+
 /**
  * Factory entry point.
  *
