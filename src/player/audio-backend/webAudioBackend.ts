@@ -23,10 +23,15 @@ interface HlsCtor {
 	isSupported: () => boolean;
 }
 
+/** Safari ships the Web Audio API under the vendor-prefixed name. */
+interface WebkitAudioContextGlobal {
+	AudioContext?: typeof AudioContext;
+	webkitAudioContext?: typeof AudioContext;
+}
+
 function resolveAudioContext(existing?: AudioContext): AudioContext {
-	const Ctor
-		= (globalThis as any).AudioContext
-		?? (globalThis as any).webkitAudioContext;
+	const g = globalThis as unknown as WebkitAudioContextGlobal;
+	const Ctor = g.AudioContext ?? g.webkitAudioContext;
 
 	if (!Ctor) {
 		throw new BrowserPolicyError({
