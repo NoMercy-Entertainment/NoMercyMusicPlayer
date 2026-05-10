@@ -1,5 +1,4 @@
 import { Plugin } from '@nomercy-entertainment/nomercy-player-core';
-import type { BasePlayerConfig, IPlayer } from '@nomercy-entertainment/nomercy-player-core';
 import type { NMMusicPlayer } from '../index';
 import type { MusicPlaylistItem } from '../types';
 
@@ -25,7 +24,7 @@ type CrossfadeHandler = (next: MusicPlaylistItem | undefined, duration: number) 
  * register this plugin if your app drives the player from a websocket or
  * Cast sync layer — let the orchestrator drive `next()` instead.
  */
-export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOptions> {
+export class AutoAdvancePlugin extends Plugin<NMMusicPlayer, AutoAdvanceOptions> {
 	static override readonly id: string = 'auto-advance';
 	static override readonly version: string = '2.0.0';
 	static override readonly description: string = 'Auto-preload + advance to next track on natural end';
@@ -34,25 +33,14 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOpt
 	private preloadHandlers: PreloadHandler[] = [];
 	private crossfadeHandlers: CrossfadeHandler[] = [];
 
-	/** Merges defaults into options before passing up to the base `Plugin.initialize`. */
-	override initialize(player: NMMusicPlayer<any>, opts: AutoAdvanceOptions, lifecycle: any): void {
-		const merged: AutoAdvanceOptions = {
-			enabled: true,
-			preloadNext: false,
-			crossfade: false,
-			crossfadeDuration: 0,
-			...(opts ?? {}),
-		};
-		super.initialize(player, merged, lifecycle);
-	}
-
-	/** Attaches `ended` and `trackEndingSoon` listeners to drive queue advancement and crossfade. */
 	override use(): void {
 		this.on('ended', () => {
+			if (this.opts?.enabled === false) return;
 			void this.onEnded();
 		});
 
-		this.on('trackEndingSoon' as any, () => {
+		this.on('trackEndingSoon', () => {
+			if (this.opts?.enabled === false) return;
 			void this.onTrackEndingSoon();
 		});
 	}
@@ -68,8 +56,8 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOpt
 	 */
 	async preloadNext(): Promise<void> {
 		const next = this.player.peekNext();
-		if (!next)
-			return;
+		if (!next) return;
+
 		try {
 			await this.player.load(next, { slot: 'next' });
 		}
@@ -94,23 +82,6 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOpt
 	}
 
 	private async onEnded(): Promise<void> {
-		if (this.opts?.enabled === false)
-			return;
-
-		// The kit's base-player handles queue advancement on ended when
-		// autoAdvance !== false (the default). This plugin only needs to
-		// drive next() itself when the consumer has disabled kit auto-advance.
-		const playerWithOpts = this.player as IPlayer<any> & { options?: BasePlayerConfig & { autoAdvance?: boolean } };
-		const kitHandles = playerWithOpts.options?.autoAdvance !== false;
-		if (!kitHandles) {
-			try {
-				await this.player.next({ source: 'auto-advance' });
-			}
-			catch (err) {
-				this.logger.warn('next() failed on ended', err);
-			}
-		}
-
 		for (const fn of this.endedHandlers) {
 			try { await fn(); }
 			catch (err) { this.logger.warn('ended handler threw', err); }
@@ -118,9 +89,6 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOpt
 	}
 
 	private async onTrackEndingSoon(): Promise<void> {
-		if (this.opts?.enabled === false)
-			return;
-
 		const next = this.player.peekNext() as MusicPlaylistItem | undefined;
 		const duration = this.opts?.crossfadeDuration ?? 0;
 
@@ -141,6 +109,7 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer<any>, AutoAdvanceOpt
 			try { await fn(next); }
 			catch (err) { this.logger.warn('preload handler threw', err); }
 		}
+
 		for (const fn of this.crossfadeHandlers) {
 			try { await fn(next, duration); }
 			catch (err) { this.logger.warn('crossfade handler threw', err); }

@@ -11,17 +11,11 @@ export default antfu({
 	],
 	typescript: {
 		overrides: {
-			'@typescript-eslint/ban-ts-comment': 'off',
-			'@typescript-eslint/no-explicit-any': 'off',
 			'antfu/top-level-function': 'off',
-			'no-async-promise-executor': 'off',
 			'no-console': 'off',
 			'no-extend-native': 'off',
-			'node/prefer-global/process': 'off',
-			'perfectionist/sort-imports': 'off',
-			'ts/no-unsafe-function-type': 'off',
 			'ts/method-signature-style': 'off',
-			'unused-imports/no-unused-vars': 'warn',
+			'unused-imports/no-unused-vars': 'error',
 		},
 	},
 	test: {
