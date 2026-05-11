@@ -1,0 +1,229 @@
+/**
+ * Regression tests for _wireBackend bugs fixed in the phase-3 music investigation.
+ *
+ * Bug 1 — Phase stuck at 'starting' after play().
+ *   Root cause: canplay fired during backend.load() (setting _firstFrameEmitted=true)
+ *   and was guarded on re-fire. The phase 'starting'→'playing' transition only
+ *   happened inside the canplay handler, so calling play() later left the phase
+ *   stuck at 'starting'.
+ *   Fix: phase transition also fires from the backend 'play' event handler.
+ *
+ * Bug 2 — Duration always 0:00.
+ *   Root cause: _wireBackend loadedmetadata handler read data.duration from the
+ *   payload, but the backend emits a raw DOM Event (not { duration: number }).
+ *   Fix: handler calls instance.duration() directly.
+ *
+ * Bug 3 — Backend config 'webaudio' ignored on lazy init.
+ *   Root cause: backend() getter always created AudioElementBackend regardless of
+ *   this.options.backend.
+ *   Fix: check config on first lazy init.
+ */
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NMMusicPlayer } from '../index';
+import { AudioElementBackend } from '../player/audio-backend/audioElementBackend';
+import { WebAudioBackend } from '../player/audio-backend/webAudioBackend';
+
+// ── Web Audio stubs ───────────────────────────────────────────────────────────
+
+class MockGainNode {
+	gain = {
+		value: 1,
+		setTargetAtTime: vi.fn(),
+		setValueAtTime: vi.fn(),
+		linearRampToValueAtTime: vi.fn(),
+		cancelScheduledValues: vi.fn(),
+	};
+
+	connect = vi.fn();
+	disconnect = vi.fn();
+}
+
+class MockAnalyserNode {
+	fftSize = 2048;
+	connect = vi.fn();
+	disconnect = vi.fn();
+}
+
+class MockSourceNode {
+	connect = vi.fn();
+	disconnect = vi.fn();
+}
+
+class MockAudioContext {
+	state: AudioContextState = 'running';
+	currentTime = 0;
+	destination = {} as AudioDestinationNode;
+
+	createGain = vi.fn(() => new MockGainNode());
+	createAnalyser = vi.fn(() => new MockAnalyserNode());
+	createMediaElementSource = vi.fn(() => new MockSourceNode());
+	resume = vi.fn(() => Promise.resolve());
+}
+
+function installAudioContext(): void {
+	(globalThis as unknown as { AudioContext: typeof MockAudioContext }).AudioContext = MockAudioContext;
+}
+
+function removeAudioContext(): void {
+	delete (globalThis as unknown as { AudioContext?: unknown }).AudioContext;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * Build a player, trigger the backend's lazy init, and wait for 'ready' phase.
+ * Returns the player + the audio element the backend created.
+ */
+async function makeReadyPlayer(id: string, opts?: { backend?: 'webaudio' | 'audio-element' }): Promise<{
+	player: NMMusicPlayer;
+	audioEl: HTMLAudioElement;
+}> {
+	const player = new NMMusicPlayer(id);
+	player.setup({ backend: opts?.backend });
+
+	// Trigger lazy backend init before ready() so the <audio> element exists.
+	const backend = player.backend();
+	void backend;
+
+	await player.ready();
+
+	const audioEl = player.container.querySelector('audio');
+	if (!audioEl) throw new Error('AudioElementBackend did not append <audio> to container');
+
+	return { player, audioEl };
+}
+
+// ── Test suite ────────────────────────────────────────────────────────────────
+
+describe('_wireBackend regression', () => {
+	beforeEach(() => {
+		(NMMusicPlayer as unknown as { _resetRegistry: () => void })._resetRegistry();
+		const div = document.createElement('div');
+		div.id = 'wire-backend-test';
+		document.body.appendChild(div);
+	});
+
+	afterEach(() => {
+		(NMMusicPlayer as unknown as { _resetRegistry: () => void })._resetRegistry();
+		document.body.innerHTML = '';
+		removeAudioContext();
+	});
+
+	// ── Bug 1: Phase 'starting' → 'playing' ─────────────────────────────────
+
+	describe('Bug 1 — phase transitions to "playing" from backend play event', () => {
+		it('transitions "starting" → "playing" when DOM play fires after _firstFrameEmitted is true', async () => {
+			const { player, audioEl } = await makeReadyPlayer('wire-backend-test');
+
+			// Simulate canplay during load — sets _firstFrameEmitted = true.
+			audioEl.dispatchEvent(new Event('canplay'));
+
+			// Stub element.play() so it resolves without browser-side playback.
+			Object.defineProperty(audioEl, 'play', {
+				value: vi.fn(() => Promise.resolve()),
+				writable: true,
+				configurable: true,
+			});
+
+			// play() transitions ready → starting.
+			await player.play();
+			expect(player.phase()).toBe('starting');
+
+			// The backend's DOM bridge emits 'play' when the audio element fires.
+			audioEl.dispatchEvent(new Event('play'));
+
+			expect(player.phase()).toBe('playing');
+		});
+
+		it('transitions to "playing" even when canplay does NOT re-fire after play()', async () => {
+			const { player, audioEl } = await makeReadyPlayer('wire-backend-test');
+
+			// Simulate a load that already fired canplay — _firstFrameEmitted = true.
+			audioEl.dispatchEvent(new Event('canplay'));
+
+			Object.defineProperty(audioEl, 'play', {
+				value: vi.fn(() => Promise.resolve()),
+				writable: true,
+				configurable: true,
+			});
+
+			await player.play();
+
+			// canplay does NOT fire again (audio was already buffered when play() ran).
+			// Only the DOM 'play' event fires.
+			audioEl.dispatchEvent(new Event('play'));
+
+			expect(player.phase()).toBe('playing');
+		});
+	});
+
+	// ── Bug 2: Duration from instance.duration() ─────────────────────────────
+
+	describe('Bug 2 — "duration" event carries value from backend.duration()', () => {
+		it('emits "duration" with the audio element\'s duration after loadedmetadata', async () => {
+			const { player, audioEl } = await makeReadyPlayer('wire-backend-test');
+
+			let emittedDuration: number | undefined;
+			player.on('duration' as never, (data: { duration: number }) => {
+				emittedDuration = data.duration;
+			});
+
+			// Set the duration on the audio element before firing loadedmetadata.
+			Object.defineProperty(audioEl, 'duration', {
+				value: 93.5,
+				writable: true,
+				configurable: true,
+			});
+
+			audioEl.dispatchEvent(new Event('loadedmetadata'));
+
+			expect(emittedDuration).toBe(93.5);
+		});
+
+		it('does NOT emit "duration" when audio element duration is NaN', async () => {
+			const { player, audioEl } = await makeReadyPlayer('wire-backend-test');
+
+			let emitCount = 0;
+			player.on('duration' as never, () => { emitCount++; });
+
+			// NaN duration — happens before valid metadata loads.
+			Object.defineProperty(audioEl, 'duration', {
+				value: NaN,
+				writable: true,
+				configurable: true,
+			});
+
+			audioEl.dispatchEvent(new Event('loadedmetadata'));
+
+			expect(emitCount).toBe(0);
+		});
+	});
+
+	// ── Bug 3: Backend config 'webaudio' honored on lazy init ────────────────
+
+	describe('Bug 3 — backend() lazy init respects MusicPlayerConfig.backend', () => {
+		it('creates AudioElementBackend by default (no backend config)', () => {
+			const player = new NMMusicPlayer('wire-backend-test').setup({});
+			expect(player.backend()).toBeInstanceOf(AudioElementBackend);
+		});
+
+		it('creates AudioElementBackend when backend config is "audio-element"', () => {
+			const player = new NMMusicPlayer('wire-backend-test').setup({ backend: 'audio-element' });
+			expect(player.backend()).toBeInstanceOf(AudioElementBackend);
+		});
+
+		it('creates WebAudioBackend when backend config is "webaudio"', () => {
+			installAudioContext();
+			const player = new NMMusicPlayer('wire-backend-test').setup({ backend: 'webaudio' });
+			expect(player.backend()).toBeInstanceOf(WebAudioBackend);
+		});
+
+		it('backend() getter is idempotent — same instance on repeat calls', () => {
+			const player = new NMMusicPlayer('wire-backend-test').setup({});
+			const first = player.backend();
+			const second = player.backend();
+			expect(first).toBe(second);
+		});
+	});
+});

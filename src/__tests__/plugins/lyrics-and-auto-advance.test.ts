@@ -31,7 +31,7 @@ describe('NMMusicPlayer — lyrics + auto-advance plugins', () => {
 		document.body.innerHTML = '';
 	});
 
-	const setup = (): NMMusicPlayer => new NMMusicPlayer('test').setup({ autoAdvance: false });
+	const setup = (): NMMusicPlayer => new NMMusicPlayer('test').setup({});
 
 	describe('lyricsPlugin', () => {
 		it('registers and use() does not throw on a track without lyricsUrl', async () => {

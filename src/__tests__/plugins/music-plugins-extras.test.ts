@@ -40,6 +40,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 			await p.ready();
 			const instance = p.getPlugin(KeyHandlerPlugin);
 			expect(instance).toBeInstanceOf(KeyHandlerPlugin);
+			if (!instance) throw new Error('KeyHandlerPlugin not registered');
 			const bindings = instance.bindings();
 			// Kit defaults — must still be present.
 			expect(bindings.has(' ')).toBe(true);
@@ -84,6 +85,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 			await p.ready();
 			const instance = p.getPlugin(CastSenderPlugin);
 			expect(instance).toBeInstanceOf(CastSenderPlugin);
+			if (!instance) throw new Error('CastSenderPlugin not registered');
 			expect(instance.isConnected()).toBe(false);
 			await expect(instance.connect()).rejects.toMatchObject({
 				name: 'BrowserPolicyError',
@@ -152,6 +154,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 				p.addPlugin(CastSenderPlugin);
 				await p.ready();
 				const instance = p.getPlugin(CastSenderPlugin);
+				if (!instance) throw new Error('CastSenderPlugin not registered');
 
 				// Stub player.current() to return a track.
 				const trackItem = {
@@ -239,6 +242,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 				p.addPlugin(CastSenderPlugin);
 				await p.ready();
 				const instance = p.getPlugin(CastSenderPlugin);
+				if (!instance) throw new Error('CastSenderPlugin not registered');
 				(p as any).current = (): unknown => undefined;
 
 				await instance.connect();
@@ -283,6 +287,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 
 				const instance = p.getPlugin(DrmPlugin);
 				expect(instance).toBeInstanceOf(DrmPlugin);
+				if (!instance) throw new Error('DrmPlugin not registered');
 				expect(instance.isSupported()).toBe(false);
 				expect(events.find(e => e.reason === 'no-eme')).toBeDefined();
 			}
@@ -357,6 +362,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 				expect(seen).toContain('ws://test/live');
 				const instance = p.getPlugin(LiveTranscodingPlugin);
 				expect(instance).toBeInstanceOf(LiveTranscodingPlugin);
+				if (!instance) throw new Error('LiveTranscodingPlugin not registered');
 				expect(instance.readyTime()).toBe(0);
 			}
 			finally {
