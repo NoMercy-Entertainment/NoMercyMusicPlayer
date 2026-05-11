@@ -37,9 +37,12 @@ import type {
 	UrlCategory,
 	UrlResolver,
 } from '@nomercy-entertainment/nomercy-player-core';
+import type { PreloadStrategy, TransitionStrategy } from '@nomercy-entertainment/nomercy-player-core';
 import type { IAudioBackend } from './player/audio-backend/backend';
 import { AudioElementBackend } from './player/audio-backend/audioElementBackend';
 import { WebAudioBackend } from './player/audio-backend/webAudioBackend';
+import { MusicPreloadStrategy } from './player/preload';
+import { CrossfadeTransitionStrategy } from '@nomercy-entertainment/nomercy-player-core';
 import type {
 	AudioBackendKind,
 	CrossfadeOptions,
@@ -73,6 +76,7 @@ export type {
 	MusicPlaylistItem,
 	TimeState,
 } from './types';
+export { MusicPreloadStrategy } from './player/preload';
 export {
 	AudioTrackState,
 	PlayState,
@@ -526,6 +530,12 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	declare now: () => number;
 	declare announce: (text: string, level?: 'polite' | 'assertive') => void;
 
+	// ── Preload + transition strategies ── composed via `preloadStrategyMethods` mixin.
+	declare setPreloadStrategy: (strategy: PreloadStrategy) => void;
+	declare setTransitionStrategy: (strategy: TransitionStrategy) => void;
+	declare preloadStrategy: () => PreloadStrategy;
+	declare transitionStrategy: () => TransitionStrategy;
+
 	// ── DOM construction helpers ── composed via `domMethods` mixin.
 	declare createElement: IPlayer<MusicEventMap>['createElement'];
 	declare createButton: IPlayer<MusicEventMap>['createButton'];
@@ -569,7 +579,28 @@ export function nmMPlayer<T extends BasePlaylistItem = MusicPlaylistItem>(id?: s
 
 	const originalSetup = instance.setup.bind(instance);
 	instance.setup = function (config: MusicPlayerConfig<T>): NMMusicPlayer<T> {
-		const result = originalSetup(config);
+		// Apply music-domain strategy defaults before delegating to the kit pipeline.
+		// Consumer-supplied strategies always win — only inject when absent.
+		const leadSeconds = config.preloadLeadSeconds ?? 10;
+		const crossfadeLeadSeconds = config.crossfadeLeadSeconds ?? 3;
+		const crossfadeTailSeconds = config.crossfadeTailSeconds ?? 3;
+
+		const enrichedConfig: MusicPlayerConfig<T> = {
+			crossfadeEnabled: true,
+			...config,
+			preloadLeadSeconds: leadSeconds,
+			crossfadeLeadSeconds,
+			crossfadeTailSeconds,
+			preloadStrategy: config.preloadStrategy ?? new MusicPreloadStrategy(leadSeconds),
+			transitionStrategy: config.transitionStrategy ?? new CrossfadeTransitionStrategy({
+				leadSeconds: crossfadeLeadSeconds,
+				tailSeconds: crossfadeTailSeconds,
+				curve: config.crossfadeDefaults?.curve ?? 'equal-power',
+			}),
+		};
+
+		const result = originalSetup(enrichedConfig);
+
 		if (config.expose === true && typeof window !== 'undefined') {
 			Object.assign(window, { nmMPlayer });
 			const originalDispose = instance.dispose.bind(instance);
