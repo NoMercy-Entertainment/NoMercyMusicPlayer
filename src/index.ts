@@ -301,8 +301,11 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	}
 
 	private _firstFrameEmitted = false;
+	private _trackEndingSoonEmitted = false;
+
 	private _wireBackend(instance: IAudioBackend): void {
 		this._firstFrameEmitted = false;
+		this._trackEndingSoonEmitted = false;
 		const self = this as unknown as { _phase: string; _playState: string; emit: (e: string, d?: unknown) => void };
 
 		instance.on('canplay', () => {
@@ -340,6 +343,7 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 
 		const onResetToPaused = () => {
 			this._firstFrameEmitted = false;
+			this._trackEndingSoonEmitted = false;
 			if (self._playState === 'playing') {
 				self._playState = 'paused';
 				this.emit('pause', undefined);
@@ -348,7 +352,23 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		instance.on('loadstart', onResetToPaused);
 
 		instance.on('timeupdate', () => {
-			this.emit('time', { time: instance.currentTime() });
+			const currentTime = instance.currentTime();
+			this.emit('time', { time: currentTime });
+
+			if (!this._trackEndingSoonEmitted) {
+				const duration = instance.duration();
+				const threshold = this.options?.trackEndingSoonThreshold ?? 10;
+				if (duration > 0 && currentTime >= duration - threshold) {
+					this._trackEndingSoonEmitted = true;
+					const currentTrack = this.current?.();
+					if (currentTrack) {
+						this.emit('trackEndingSoon', {
+							remaining: duration - currentTime,
+							currentTrack,
+						});
+					}
+				}
+			}
 		});
 		instance.on('loadedmetadata', (data?: { duration: number }) => {
 			if (!data) return;

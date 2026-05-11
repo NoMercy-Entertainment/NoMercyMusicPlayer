@@ -1,4 +1,7 @@
 // Music-specific plugins
+export { musicUiPlugin, MusicUiPlugin } from './music-ui';
+export type { MusicUiEvents, MusicUiOptions } from './music-ui';
+
 export { autoAdvancePlugin, AutoAdvancePlugin } from './auto-advance';
 export type { AutoAdvanceOptions } from './auto-advance';
 

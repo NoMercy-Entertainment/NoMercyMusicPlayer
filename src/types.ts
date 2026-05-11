@@ -112,4 +112,10 @@ export interface MusicPlayerConfig<T extends BasePlaylistItem = MusicPlaylistIte
 	crossfadeDefaults?: { duration: number; curve?: 'linear' | 'equal-power' };
 	/** Initial playlist — items inline, or a URL fetched and parsed at setup. */
 	playlist?: T[] | string;
+	/**
+	 * Seconds before natural end at which `trackEndingSoon` fires.
+	 * AutoAdvancePlugin listens to this for preload and crossfade cues.
+	 * Default `10`.
+	 */
+	trackEndingSoonThreshold?: number;
 }
