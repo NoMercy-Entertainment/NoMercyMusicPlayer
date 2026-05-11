@@ -336,6 +336,11 @@ export class AudioElementBackend implements IAudioBackend {
 		this.outputGain = ctx.createGain();
 		this.sourceNode.connect(this.analyserNode);
 		this.analyserNode.connect(this.outputGain);
+
+		// Baseline routing: outputGain → destination so audio is audible without
+		// any plugin. AudioGraphPlugin disconnects this and re-routes through its
+		// effect chain when it takes ownership via outputNode(ctx).
+		this.outputGain.connect(ctx.destination);
 	}
 
 	mediaElement(): HTMLMediaElement {
