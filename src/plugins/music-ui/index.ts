@@ -183,7 +183,7 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
     // ── DOM construction ───────────────────────────────────────────────────────
 
     private buildDom(): void {
-        this.overlay = this.mount('nmmusic-ui-overlay') as HTMLDivElement;
+        this.overlay = this.mount('nmmusic-ui-overlay');
         this.overlay.className = 'nmmusic-ui';
 
         this.artRefs = this.buildArt();

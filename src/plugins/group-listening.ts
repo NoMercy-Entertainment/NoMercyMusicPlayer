@@ -111,7 +111,11 @@ export class GroupListeningPlugin extends Plugin<NMMusicPlayer<any>, GroupListen
 		if (typeof text !== 'string')
 			return;
 		let msg: SyncMessage;
-		try { msg = JSON.parse(text) as SyncMessage; }
+		try {
+			const raw: unknown = JSON.parse(text);
+			if (raw === null || typeof raw !== 'object') return;
+			msg = raw as SyncMessage;
+		}
 		catch { return; }
 		this.applyRemote(msg);
 	};

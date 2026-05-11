@@ -96,7 +96,7 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer, AutoAdvanceOptions>
 	}
 
 	private async onTrackEndingSoon(): Promise<void> {
-		const next = this.player.peekNext() as MusicPlaylistItem | undefined;
+		const next = this.player.peekNext();
 		const duration = this.opts?.crossfadeDuration ?? 0;
 
 		if (this.opts?.preloadNext === true) {

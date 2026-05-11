@@ -42,7 +42,7 @@ function resolveAudioContext(existing?: AudioContext): AudioContext {
 		});
 	}
 
-	return existing ?? new Ctor() as AudioContext;
+	return existing ?? new Ctor();
 }
 
 /**

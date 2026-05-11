@@ -109,7 +109,11 @@ export class LiveTranscodingPlugin extends Plugin<NMMusicPlayer<any>, LiveTransc
 		if (typeof text !== 'string')
 			return;
 		let msg: InboundMessage;
-		try { msg = JSON.parse(text) as InboundMessage; }
+		try {
+			const raw: unknown = JSON.parse(text);
+			if (raw === null || typeof raw !== 'object') return;
+			msg = raw as InboundMessage;
+		}
 		catch { return; }
 		if (msg.type === 'segment-ready' && typeof msg.time === 'number') {
 			this.applySegmentReady(msg as SegmentReadyMessage);

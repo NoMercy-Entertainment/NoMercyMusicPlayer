@@ -36,7 +36,7 @@ export class CastSenderPlugin extends BaseCastSenderPlugin<NMMusicPlayer<any>, M
 		ctors: ChromeCastMediaCtors & { MusicTrackMediaMetadata?: new () => Record<string, unknown> },
 	): Promise<unknown> {
 		const Music = ctors.MusicTrackMediaMetadata ?? ctors.GenericMediaMetadata;
-		const meta = new Music() as Record<string, unknown>;
+		const meta: Record<string, unknown> = new Music();
 		meta['title'] = item.name ?? '';
 		const artists = item.artist_track?.map(a => a?.name).filter(Boolean).join(', ') ?? '';
 		if (artists)

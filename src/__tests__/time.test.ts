@@ -40,7 +40,7 @@ describe('NMMusicPlayer — time', () => {
 
 		it('updates the read value when not prevented', async () => {
 			const p = setup();
-			await (p.currentTime(7) as Promise<void>);
+			await p.currentTime(7);
 			expect(p.currentTime()).toBe(7);
 		});
 
@@ -48,17 +48,17 @@ describe('NMMusicPlayer — time', () => {
 			const p = setup();
 			let seekTime: number | undefined;
 			p.on('seek' as any, (data: any) => { seekTime = data.time; });
-			await (p.currentTime(15) as Promise<void>);
+			await p.currentTime(15);
 			expect(seekTime).toBe(15);
 		});
 
 		it('preventDefault → emits seekPrevented, value unchanged', async () => {
 			const p = setup();
-			await (p.currentTime(10) as Promise<void>);
+			await p.currentTime(10);
 			let preventedReason: string | undefined;
 			p.on('beforeSeek' as any, (e: any) => { e.preventDefault(); });
 			p.on('seekPrevented' as any, (data: any) => { preventedReason = data.reason; });
-			await (p.currentTime(99) as Promise<void>);
+			await p.currentTime(99);
 			expect(p.currentTime()).toBe(10);
 			expect(preventedReason).toBe('listener-prevented');
 		});
@@ -111,7 +111,7 @@ describe('NMMusicPlayer — time', () => {
 	describe('timeData()', () => {
 		it('returns the aggregated TimeState shape', async () => {
 			const p = setup();
-			await (p.currentTime(5) as Promise<void>);
+			await p.currentTime(5);
 			const data = p.timeData();
 			expect(data).toHaveProperty('position');
 			expect(data).toHaveProperty('duration');

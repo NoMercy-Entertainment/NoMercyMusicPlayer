@@ -19,10 +19,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { PlayerError, ResourceError, StateError } from '@nomercy-entertainment/nomercy-player-core';
 import { NMMusicPlayer, nmMPlayer } from '../index';
 
-const catchError = (fn: () => unknown): unknown => {
+const catchError = (fn: () => unknown): PlayerError => {
 	try { fn(); }
-	catch (e) { return e; }
-	return undefined;
+	catch (e) { return e as PlayerError; }
+	throw new Error('catchError: fn did not throw');
 };
 
 describe('NMMusicPlayer constructor', () => {
@@ -104,14 +104,14 @@ describe('NMMusicPlayer constructor', () => {
 		});
 
 		it('no-element error carries spec fields: code, severity, scope', () => {
-			const err = catchError(() => nmMPlayer()) as PlayerError;
+			const err = catchError(() => nmMPlayer());
 			expect(err.code).toBe('core:player/no-element');
 			expect(err.severity).toBe('error');
 			expect(err.scope).toEqual({ kind: 'core' });
 		});
 
 		it('not-found error carries spec fields', () => {
-			const err = catchError(() => nmMPlayer(999)) as PlayerError;
+			const err = catchError(() => nmMPlayer(999));
 			expect(err.code).toBe('core:player/not-found');
 			expect(err.severity).toBe('error');
 			expect(err.scope).toEqual({ kind: 'core' });
@@ -120,7 +120,7 @@ describe('NMMusicPlayer constructor', () => {
 		it('element-missing error is a ResourceError (not StateError)', () => {
 			const err = catchError(() => nmMPlayer('absent-div'));
 			expect(err).toBeInstanceOf(ResourceError);
-			expect((err as PlayerError).code).toBe('core:player/element-missing');
+			expect(err.code).toBe('core:player/element-missing');
 		});
 
 		it('element-not-div error is a StateError', () => {
@@ -129,13 +129,13 @@ describe('NMMusicPlayer constructor', () => {
 			document.body.appendChild(span);
 			const err = catchError(() => nmMPlayer('spec-span-not-div'));
 			expect(err).toBeInstanceOf(StateError);
-			expect((err as PlayerError).code).toBe('core:player/element-not-div');
+			expect(err.code).toBe('core:player/element-not-div');
 		});
 
 		it('invalid-id-type error is a StateError', () => {
 			const err = catchError(() => nmMPlayer(true as any));
 			expect(err).toBeInstanceOf(StateError);
-			expect((err as PlayerError).code).toBe('core:player/invalid-id-type');
+			expect(err.code).toBe('core:player/invalid-id-type');
 		});
 	});
 

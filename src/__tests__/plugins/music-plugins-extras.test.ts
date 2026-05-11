@@ -38,7 +38,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 			const p = setup();
 			p.addPlugin(KeyHandlerPlugin);
 			await p.ready();
-			const instance = p.getPlugin(KeyHandlerPlugin) as KeyHandlerPlugin;
+			const instance = p.getPlugin(KeyHandlerPlugin);
 			expect(instance).toBeInstanceOf(KeyHandlerPlugin);
 			const bindings = instance.bindings();
 			// Kit defaults — must still be present.
@@ -61,7 +61,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 			const p = setup();
 			p.addPlugin(MediaSessionPlugin);
 			await p.ready();
-			const instance = p.getPlugin(MediaSessionPlugin) as MediaSessionPlugin;
+			const instance = p.getPlugin(MediaSessionPlugin);
 			const meta = (instance as unknown as { getMetadata: (item: any) => any }).getMetadata({
 				id: 'a',
 				name: 'Track A',
@@ -82,7 +82,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 			const p = setup();
 			p.addPlugin(CastSenderPlugin);
 			await p.ready();
-			const instance = p.getPlugin(CastSenderPlugin) as CastSenderPlugin;
+			const instance = p.getPlugin(CastSenderPlugin);
 			expect(instance).toBeInstanceOf(CastSenderPlugin);
 			expect(instance.isConnected()).toBe(false);
 			await expect(instance.connect()).rejects.toMatchObject({
@@ -151,7 +151,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 				const p = setup();
 				p.addPlugin(CastSenderPlugin);
 				await p.ready();
-				const instance = p.getPlugin(CastSenderPlugin) as CastSenderPlugin;
+				const instance = p.getPlugin(CastSenderPlugin);
 
 				// Stub player.current() to return a track.
 				const trackItem = {
@@ -238,7 +238,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 				const p = setup();
 				p.addPlugin(CastSenderPlugin);
 				await p.ready();
-				const instance = p.getPlugin(CastSenderPlugin) as CastSenderPlugin;
+				const instance = p.getPlugin(CastSenderPlugin);
 				(p as any).current = (): unknown => undefined;
 
 				await instance.connect();
@@ -281,7 +281,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 				p.addPlugin(DrmPlugin, { keySystem: 'com.widevine.alpha', licenseUrl: 'https://example.com/license' });
 				await p.ready();
 
-				const instance = p.getPlugin(DrmPlugin) as DrmPlugin;
+				const instance = p.getPlugin(DrmPlugin);
 				expect(instance).toBeInstanceOf(DrmPlugin);
 				expect(instance.isSupported()).toBe(false);
 				expect(events.find(e => e.reason === 'no-eme')).toBeDefined();
@@ -322,7 +322,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 				p.addPlugin(GroupListeningPlugin, { wsUrl: 'ws://test/group' });
 				await p.ready();
 				expect(seen).toContain('ws://test/group');
-				const instance = p.getPlugin(GroupListeningPlugin) as GroupListeningPlugin;
+				const instance = p.getPlugin(GroupListeningPlugin);
 				expect(instance).toBeInstanceOf(GroupListeningPlugin);
 			}
 			finally {
@@ -355,7 +355,7 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 				p.addPlugin(LiveTranscodingPlugin, { wsUrl: 'ws://test/live' });
 				await p.ready();
 				expect(seen).toContain('ws://test/live');
-				const instance = p.getPlugin(LiveTranscodingPlugin) as LiveTranscodingPlugin;
+				const instance = p.getPlugin(LiveTranscodingPlugin);
 				expect(instance).toBeInstanceOf(LiveTranscodingPlugin);
 				expect(instance.readyTime()).toBe(0);
 			}
