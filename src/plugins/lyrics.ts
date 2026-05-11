@@ -7,6 +7,17 @@ import type {
 import type { NMMusicPlayer } from '../index';
 import type { MusicPlaylistItem } from '../types';
 
+/** Events emitted by {@link LyricsPlugin}. */
+export interface LyricsEvents {
+	'line': { text: string; [key: string]: unknown };
+	'lineEnter': { text: string; [key: string]: unknown };
+	'lineExit': { text: string; [key: string]: unknown };
+	'loaded': void;
+	'enabled': void;
+	'disabled': void;
+}
+
+
 /** Options for {@link LyricsPlugin}. */
 export interface LyricsOptions {
 	/** Resolve a track to a lyrics URL. Defaults to `track.lyricsUrl`. */

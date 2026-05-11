@@ -31,7 +31,7 @@ describe('NMMusicPlayer — lyrics + auto-advance plugins', () => {
 		document.body.innerHTML = '';
 	});
 
-	const setup = (): NMMusicPlayer => new NMMusicPlayer('test').setup({});
+	const setup = (): NMMusicPlayer => new NMMusicPlayer('test').setup({ autoAdvance: false });
 
 	describe('lyricsPlugin', () => {
 		it('registers and use() does not throw on a track without lyricsUrl', async () => {
@@ -88,7 +88,7 @@ describe('NMMusicPlayer — lyrics + auto-advance plugins', () => {
 			const p = setup();
 			p.addPlugin(autoAdvancePlugin);
 			await p.ready();
-			p.queue([track('a'), track('b')]);
+			p.queue([track('a', { url: 'blob:a' }), track('b', { url: 'blob:b' })]);
 
 			const instance = p.getPlugin(AutoAdvancePlugin);
 			instance!.options({ enabled: false });
@@ -96,7 +96,7 @@ describe('NMMusicPlayer — lyrics + auto-advance plugins', () => {
 			let nextFired = false;
 			p.on('next' as any, () => { nextFired = true; });
 
-			await instance!.advance();
+			try { await instance!.advance(); } catch { /* load rejects in test env — next event already fired */ }
 			expect(nextFired).toBe(true);
 		});
 	});

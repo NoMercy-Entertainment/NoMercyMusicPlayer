@@ -18,8 +18,7 @@ export { keyHandlerPlugin, KeyHandlerPlugin } from './key-handler';
 export { liveTranscodingPlugin, LiveTranscodingPlugin } from './live-transcoding';
 export type { LiveTranscodingEvents, LiveTranscodingOptions } from './live-transcoding';
 export { lyricsPlugin, LyricsPlugin } from './lyrics';
-
-export type { LyricsOptions } from './lyrics';
+export type { LyricsEvents, LyricsOptions } from './lyrics';
 export { mediaSessionPlugin, MediaSessionPlugin } from './media-session';
 export { messagePlugin, MessagePlugin } from './message';
 export type { MessageOptions } from './message';

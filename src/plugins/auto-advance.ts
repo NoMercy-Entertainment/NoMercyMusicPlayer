@@ -82,9 +82,16 @@ export class AutoAdvancePlugin extends Plugin<NMMusicPlayer, AutoAdvanceOptions>
 	}
 
 	private async onEnded(): Promise<void> {
+		try {
+			await this.player.next({ source: 'auto-advance' });
+		}
+		catch (err) {
+			this.logger?.warn('next() failed on ended', err);
+		}
+
 		for (const fn of this.endedHandlers) {
 			try { await fn(); }
-			catch (err) { this.logger.warn('ended handler threw', err); }
+			catch (err) { this.logger?.warn('ended handler threw', err); }
 		}
 	}
 
