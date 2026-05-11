@@ -27,13 +27,13 @@ import type {
 	PlayerExperimental,
 	PlayerPhase,
 	Plugin,
+	PluginCtorWithId,
 	QualityLevel,
 	ResolvedUrl,
 	SetupState,
 	StreamFactory,
 	SubtitleTrack,
 	Translations,
-
 	UrlCategory,
 	UrlResolver,
 } from '@nomercy-entertainment/nomercy-player-core';
@@ -238,10 +238,10 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	declare backlogRemove: (id: string | number) => void;
 	declare backlogClear: () => void;
 
-	declare addPlugin: <P extends Plugin>(PluginClass: new () => P, opts?: P['opts']) => this;
-	declare getPlugin: <P extends Plugin>(PluginClass: new () => P) => P | undefined;
-	declare getPluginById: (id: string) => Plugin | undefined;
-	declare removePlugin: <P extends Plugin>(PluginClass: new () => P) => void;
+	declare addPlugin: <P extends Plugin>(PluginClass: PluginCtorWithId & (new () => P), opts?: P['opts']) => this;
+	declare getPlugin: <P extends object>(PluginClass: PluginCtorWithId & (new () => P)) => P | undefined;
+	declare getPluginById: <P extends object = object>(id: string) => P | undefined;
+	declare removePlugin: <P extends Plugin>(PluginClass: PluginCtorWithId & (new () => P)) => void;
 	declare removePluginById: (id: string) => void;
 	declare plugins: () => ReadonlyArray<Plugin>;
 	declare enabledPlugins: () => ReadonlyArray<Plugin>;
@@ -284,7 +284,10 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	backend(kind?: AudioBackendKind): IAudioBackend | Promise<void> {
 		if (kind === undefined) {
 			if (!this._backend) {
-				this._backend = new AudioElementBackend(this.container);
+				const configKind = (this.options as MusicPlayerConfig<T> | undefined)?.backend ?? 'audio-element';
+				this._backend = configKind === 'webaudio'
+					? new WebAudioBackend(this.container)
+					: new AudioElementBackend(this.container);
 				this._wireBackend(this._backend);
 			}
 			return this._backend;
@@ -316,11 +319,13 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 		instance.on('canplay', () => {
 			if (this._firstFrameEmitted) return;
 			this._firstFrameEmitted = true;
+
 			if (self._phase === 'starting') {
 				const from = self._phase;
 				self._phase = 'playing';
 				this.emit('phase', { from, to: 'playing' });
 			}
+
 			this.emit('firstFrame', undefined);
 		});
 
@@ -329,7 +334,18 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 				self._playState = 'playing';
 				this.emit('play', undefined);
 			}
+
+			// Phase: 'starting' → 'playing' when audio actually starts playing.
+			// Needed for the "load → wait → play" pattern where canplay already
+			// fired during load (setting _firstFrameEmitted = true) and won't
+			// re-fire on element.play().
+			if (self._phase === 'starting') {
+				const from = self._phase;
+				self._phase = 'playing';
+				this.emit('phase', { from, to: 'playing' });
+			}
 		});
+
 		instance.on('pause', () => {
 			if (self._playState === 'playing') {
 				self._playState = 'paused';
@@ -375,9 +391,14 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 				}
 			}
 		});
-		instance.on('loadedmetadata', (data?: { duration: number }) => {
-			if (!data) return;
-			this.emit('duration', { duration: data.duration });
+
+		// Read duration from the backend directly — the raw DOM loadedmetadata
+		// event object does not carry a duration property.
+		instance.on('loadedmetadata', () => {
+			const duration = instance.duration();
+			if (duration > 0) {
+				this.emit('duration', { duration });
+			}
 		});
 	}
 

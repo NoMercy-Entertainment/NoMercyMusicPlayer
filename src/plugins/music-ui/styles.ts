@@ -38,6 +38,7 @@ export const STYLE_ELEMENT_ID = 'nmmusic-ui-styles';
 
 export const musicUiCss = `
 .nmmusic-ui {
+    container-type: inline-size;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -52,6 +53,7 @@ export const musicUiCss = `
 
 /* ── Album art ──────────────────────────────────────────── */
 .nmmusic-art {
+    position: relative;
     width: 200px;
     height: 200px;
     border-radius: 12px;
@@ -65,14 +67,22 @@ export const musicUiCss = `
     align-self: center;
 }
 .nmmusic-art.transitioning { opacity: 0.5; }
-.nmmusic-art-img { width: 100%; height: 100%; object-fit: cover; }
+.nmmusic-art-img {
+    position: absolute; 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    z-index: 10;
+}
 .nmmusic-art-placeholder {
+    position: absolute;
     color: #444;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
     height: 100%;
+    z-index: 0;
 }
 .nmmusic-art[hidden] { display: none !important; }
 
@@ -212,16 +222,18 @@ export const musicUiCss = `
 .nmmusic-play-btn:hover { background: #7d75ff; }
 
 /* ── Responsive button priority ─────────────────────────── */
-/* tier 3: shuffle + repeat hidden below 280px */
-@container (max-width: 280px) {
+/* Thresholds use content-box width (.nmmusic-ui has 16px padding on each side,
+   so a 280px widget has 248px content width. Tiers are set below that). */
+/* tier 3: shuffle + repeat hidden below 230px content width (≈262px widget) */
+@container (max-width: 229px) {
     .nmmusic-btn[data-priority="3"] { display: none !important; }
 }
-/* tier 2: prev + next hidden below 200px */
-@container (max-width: 200px) {
+/* tier 2: prev + next hidden below 170px content width (≈202px widget) */
+@container (max-width: 169px) {
     .nmmusic-btn[data-priority="2"] { display: none !important; }
 }
-/* tier 1 (volume group) hidden below 160px */
-@container (max-width: 160px) {
+/* tier 1 (volume group) hidden below 130px content width (≈162px widget) */
+@container (max-width: 129px) {
     .nmmusic-volume-group { display: none !important; }
 }
 

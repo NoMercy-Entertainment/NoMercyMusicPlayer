@@ -177,6 +177,7 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         this.buildDom();
         this.wireEvents();
         this.applyOptions(this.opts ?? {});
+        this.syncInitialState();
     }
 
 
@@ -573,6 +574,40 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         const buffered = this.player.buffered();
         const ratio = buffered / this.cachedDuration;
         this.progressRefs.seekBuffer.style.width = `${ratio * 100}%`;
+    }
+
+
+    // ── Initial state sync ─────────────────────────────────────────────────────
+
+    private syncInitialState(): void {
+        const current = this.player.current();
+        if (isMusicItem(current)) {
+            this.applyCurrentTrack(current);
+        }
+
+        const duration = this.player.duration();
+        if (duration > 0) {
+            this.cachedDuration = duration;
+            this.progressRefs.durationTimeEl.textContent = fmt(duration);
+        }
+
+        const currentTime = this.player.currentTime();
+        if (currentTime > 0) {
+            const ratio = this.cachedDuration > 0 ? currentTime / this.cachedDuration : 0;
+            this.progressRefs.currentTimeEl.textContent = fmt(currentTime);
+            this.updateSeekPosition(ratio, this.progressRefs.seekFill, this.progressRefs.seekThumb, this.progressRefs.seekBar);
+        }
+
+        const vol = this.player.volume();
+        this.controlsRefs.volSlider.value = String(vol);
+        this.controlsRefs.volSlider.style.setProperty('--vol-pct', `${vol * 100}%`);
+
+        this.currentRepeat = this.player.repeatState();
+        this.applyRepeatIcon();
+
+        const shuffleVal = this.player.shuffleState();
+        this.isShuffle = shuffleVal === ShuffleState.ON;
+        this.controlsRefs.shuffleBtn.classList.toggle('active', this.isShuffle);
     }
 
 
