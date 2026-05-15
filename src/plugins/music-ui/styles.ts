@@ -272,6 +272,69 @@ export const musicUiCss = `
 
 /* ── Speed menu (hidden by default) ─────────────────────── */
 .nmmusic-speed-btn[hidden] { display: none !important; }
+
+/* ── Vertical volume popup ──────────────────────────────── */
+.nmmusic-volume-group {
+    position: relative;
+}
+.nmmusic-vol-slider-vertical {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #252836;
+    border-radius: 8px;
+    padding: 12px 8px;
+    z-index: 10;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+.nmmusic-vol-slider-vertical-open {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.nmmusic-vol-slider-vertical-input {
+    -webkit-appearance: slider-vertical;
+    appearance: none;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 4px;
+    height: 80px;
+    background: #2a2d3a;
+    border-radius: 2px;
+    cursor: pointer;
+    outline: none;
+}
+.nmmusic-vol-slider-vertical-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #6c63ff;
+}
+.nmmusic-vol-slider-vertical-input::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #6c63ff;
+    border: none;
+}
+
+/* ── Touch-device hover suppression ─────────────────────── */
+@media (hover: none) {
+    .nmmusic-btn:hover {
+        color: #aaa;
+        background: transparent !important;
+    }
+    .nmmusic-btn.active:hover {
+        color: #6c63ff;
+    }
+    .nmmusic-play-btn:hover {
+        background: #6c63ff !important;
+        color: #fff;
+    }
+}
 `;
 
 export function ensureMusicUiStyles(): void {

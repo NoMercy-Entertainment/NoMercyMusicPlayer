@@ -68,6 +68,14 @@ export interface MusicUiOptions {
     /** Show the playback-speed button. Default `false` — most music listeners
      *  don't want speed control but the option must exist for parity. */
     showSpeed?: boolean;
+    /**
+     * Volume slider orientation.
+     * - `'horizontal'` — always-visible inline slider (legacy default).
+     * - `'vertical'`   — popup slider above the mute button, toggle on click.
+     * - `'auto'`       — vertical when width ≤ 520 px OR on a touch-only device.
+     *   Default: `'auto'`.
+     */
+    volumeSlider?: 'horizontal' | 'vertical' | 'auto';
 }
 
 /** Events emitted by {@link MusicUiPlugin} under the `plugin:music-ui:` namespace. */
@@ -111,6 +119,8 @@ interface ControlsRefs {
     volumeGroup: HTMLDivElement;
     muteBtn: HTMLButtonElement;
     volSlider: HTMLInputElement;
+    volSliderVertical: HTMLDivElement;
+    volSliderVerticalInput: HTMLInputElement;
     speedBtn: HTMLButtonElement;
 }
 
@@ -166,6 +176,11 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
     private isScrubbing = false;
     private cachedDuration = 0;
 
+    // ── Volume slider state ───────────────────────────────────────────
+    private _volSliderVerticalOpen = false;
+    private _isNoHover = false;
+    private _volResizeObserver: ResizeObserver | null = null;
+
     // ── Playback state ────────────────────────────────────────────────
     private currentRepeat: RepeatState = RepeatState.OFF;
     private isShuffle = false;
@@ -176,8 +191,16 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         ensureMusicUiStyles();
         this.buildDom();
         this.wireEvents();
+        this.wireNoHover();
+        this.wireVolumeSlider();
         this.applyOptions(this.opts ?? {});
         this.syncInitialState();
+    }
+
+    override dispose(): void {
+        this._volResizeObserver?.disconnect();
+        this._volResizeObserver = null;
+        super.dispose();
     }
 
 
@@ -305,8 +328,23 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         volSlider.value = '1';
         volSlider.setAttribute('aria-label', 'Volume');
 
+        const volSliderVertical = document.createElement('div');
+        volSliderVertical.className = 'nmmusic-vol-slider-vertical';
+
+        const volSliderVerticalInput = document.createElement('input');
+        volSliderVerticalInput.type = 'range';
+        volSliderVerticalInput.className = 'nmmusic-vol-slider-vertical-input';
+        volSliderVerticalInput.min = '0';
+        volSliderVerticalInput.max = '100';
+        volSliderVerticalInput.step = '1';
+        volSliderVerticalInput.value = '100';
+        volSliderVerticalInput.setAttribute('aria-label', 'Volume');
+        volSliderVerticalInput.setAttribute('orient', 'vertical');
+
+        volSliderVertical.appendChild(volSliderVerticalInput);
         volumeGroup.appendChild(muteBtn);
         volumeGroup.appendChild(volSlider);
+        volumeGroup.appendChild(volSliderVertical);
 
         controlsRow.appendChild(shuffleBtn);
         controlsRow.appendChild(prevBtn);
@@ -317,9 +355,22 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         controlsRow.appendChild(volumeGroup);
         this.overlay.appendChild(controlsRow);
 
-        this.wireControls(shuffleBtn, prevBtn, playBtn, nextBtn, repeatBtn, speedBtn, muteBtn, volSlider);
+        this.wireControls(shuffleBtn, prevBtn, playBtn, nextBtn, repeatBtn, speedBtn, muteBtn, volSlider, volSliderVerticalInput);
 
-        return { controlsRow, shuffleBtn, prevBtn, playBtn, nextBtn, repeatBtn, volumeGroup, muteBtn, volSlider, speedBtn };
+        return {
+            controlsRow,
+            shuffleBtn,
+            prevBtn,
+            playBtn,
+            nextBtn,
+            repeatBtn,
+            volumeGroup,
+            muteBtn,
+            volSlider,
+            volSliderVertical,
+            volSliderVerticalInput,
+            speedBtn,
+        };
     }
 
     private makeBtn(action: string, iconKey: MusicIconKey, priority: number): HTMLButtonElement {
@@ -350,6 +401,8 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         seekFill: HTMLDivElement,
         seekThumb: HTMLDivElement,
     ): void {
+        seekBar.style.touchAction = 'none';
+
         const seekToRatio = (ratio: number): void => {
             const clamped = Math.min(1, Math.max(0, ratio));
             const time = clamped * this.cachedDuration;
@@ -358,30 +411,50 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
             this.emit('seek', { time });
         };
 
-        const ratioFromEvent = (event: MouseEvent): number => {
+        const ratioFromClientX = (clientX: number): number => {
             const rect = seekBar.getBoundingClientRect();
-            return rect.width > 0 ? (event.clientX - rect.left) / rect.width : 0;
+            return rect.width > 0 ? (clientX - rect.left) / rect.width : 0;
         };
 
+        // Mouse scrub.
         this.listen(seekBar, 'mousedown', (event: Event) => {
             this.isScrubbing = true;
-            seekToRatio(ratioFromEvent(event as MouseEvent));
+            seekToRatio(ratioFromClientX((event as MouseEvent).clientX));
         });
 
         this.listen(document, 'mousemove', (event: Event) => {
             if (!this.isScrubbing) return;
-            seekToRatio(ratioFromEvent(event as MouseEvent));
+            seekToRatio(ratioFromClientX((event as MouseEvent).clientX));
         });
 
         this.listen(document, 'mouseup', () => {
             this.isScrubbing = false;
         });
 
+        // Touch scrub — prevents browser scroll-interception while dragging.
+        this.listen(seekBar, 'touchstart', (event: Event) => {
+            const touch = (event as TouchEvent).touches[0];
+            if (!touch) return;
+            this.isScrubbing = true;
+            seekToRatio(ratioFromClientX(touch.clientX));
+        });
+
+        this.listen(document, 'touchmove', (event: Event) => {
+            if (!this.isScrubbing) return;
+            const touch = (event as TouchEvent).touches[0];
+            if (!touch) return;
+            seekToRatio(ratioFromClientX(touch.clientX));
+        });
+
+        this.listen(document, 'touchend', () => {
+            this.isScrubbing = false;
+        });
+
         this.listen(seekBar, 'keydown', (event: Event) => {
             const key = (event as KeyboardEvent).key;
             const step = this.cachedDuration > 0 ? 5 / this.cachedDuration : 0;
-            if (key === 'ArrowRight') { seekToRatio((this.currentSeekRatio() + step)); event.preventDefault(); }
-            if (key === 'ArrowLeft') { seekToRatio((this.currentSeekRatio() - step)); event.preventDefault(); }
+            if (key === 'ArrowRight') { seekToRatio(this.currentSeekRatio() + step); event.preventDefault(); }
+            if (key === 'ArrowLeft') { seekToRatio(this.currentSeekRatio() - step); event.preventDefault(); }
         });
     }
 
@@ -414,6 +487,7 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         speedBtn: HTMLButtonElement,
         muteBtn: HTMLButtonElement,
         volSlider: HTMLInputElement,
+        volSliderVerticalInput: HTMLInputElement,
     ): void {
         this.listen(shuffleBtn, 'click', () => {
             void this.player.shuffleState(!this.isShuffle);
@@ -444,6 +518,14 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         });
 
         this.listen(muteBtn, 'click', () => {
+            // In vertical-slider mode the click opens/closes the popup.
+            // Bail before toggling mute so a single tap on mobile doesn't both
+            // mute AND toggle the popup (leaving mute flipped with slider closed).
+            const volumeGroup = muteBtn.closest('.nmmusic-volume-group');
+            if (volumeGroup?.classList.contains('nmmusic-volume-group-vertical')) {
+                this.toggleVerticalVolSlider();
+                return;
+            }
             this.player.toggleMute();
         });
 
@@ -451,6 +533,100 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
             const inputEl = event.target as HTMLInputElement;
             this.player.volume(parseFloat(inputEl.value));
         });
+
+        this.listen(volSliderVerticalInput, 'input', (event: Event) => {
+            const inputEl = event.target as HTMLInputElement;
+            const level = Number(inputEl.value) / 100;
+            this.player.volume(level);
+        });
+    }
+
+
+    // ── Touch / no-hover detection ─────────────────────────────────────────────
+
+    private wireNoHover(): void {
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+
+        const mql = window.matchMedia('(hover: none) and (pointer: coarse)');
+        this._isNoHover = mql.matches;
+
+        this.listen(mql as unknown as EventTarget, 'change', () => {
+            this._isNoHover = (mql as MediaQueryList).matches;
+            this.applyVolumeMode();
+        });
+    }
+
+    private wireVolumeSlider(): void {
+        const container = this.player.container;
+        if (!container) return;
+
+        this.applyVolumeMode();
+
+        const AUTO_VERTICAL_THRESHOLD = 520;
+
+        const evaluate = (width: number): boolean =>
+            this._isNoHover || width <= AUTO_VERTICAL_THRESHOLD;
+
+        this._volResizeObserver = new ResizeObserver(entries => {
+            const entry = entries[0];
+            if (!entry) return;
+            const useVertical = evaluate(entry.contentRect.width);
+            this.applyVerticalMode(useVertical);
+            if (!useVertical && this._volSliderVerticalOpen) {
+                this.closeVerticalVolSlider();
+            }
+        });
+
+        this._volResizeObserver.observe(container);
+    }
+
+    private applyVolumeMode(): void {
+        const mode = this.opts?.volumeSlider ?? 'auto';
+        const container = this.player.container;
+
+        if (mode === 'horizontal') {
+            this.applyVerticalMode(false);
+            return;
+        }
+
+        if (mode === 'vertical') {
+            this.applyVerticalMode(true);
+            return;
+        }
+
+        // 'auto'
+        const width = container?.clientWidth ?? 0;
+        const AUTO_VERTICAL_THRESHOLD = 520;
+        this.applyVerticalMode(this._isNoHover || width <= AUTO_VERTICAL_THRESHOLD);
+    }
+
+    private applyVerticalMode(vertical: boolean): void {
+        const { volumeGroup, volSlider, volSliderVertical } = this.controlsRefs;
+        volumeGroup.classList.toggle('nmmusic-volume-group-vertical', vertical);
+        volSlider.hidden = vertical;
+        volSliderVertical.classList.toggle('nmmusic-vol-slider-vertical-open', vertical && this._volSliderVerticalOpen);
+    }
+
+    private toggleVerticalVolSlider(): void {
+        if (this._volSliderVerticalOpen) {
+            this.closeVerticalVolSlider();
+        }
+        else {
+            this.openVerticalVolSlider();
+        }
+    }
+
+    private openVerticalVolSlider(): void {
+        const { volSliderVertical, volSliderVerticalInput } = this.controlsRefs;
+        const currentLevel = this.player.volume();
+        volSliderVerticalInput.value = String(Math.round(currentLevel * 100));
+        volSliderVertical.classList.add('nmmusic-vol-slider-vertical-open');
+        this._volSliderVerticalOpen = true;
+    }
+
+    private closeVerticalVolSlider(): void {
+        this.controlsRefs.volSliderVertical.classList.remove('nmmusic-vol-slider-vertical-open');
+        this._volSliderVerticalOpen = false;
     }
 
 
@@ -489,19 +665,20 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         this.on('volume', (data) => {
             const level = data.level;
             this.controlsRefs.volSlider.value = String(level);
-            this.controlsRefs.volSlider.style.setProperty(
-                '--vol-pct',
-                `${level * 100}%`,
-            );
+            this.controlsRefs.volSlider.style.setProperty('--vol-pct', `${level * 100}%`);
+            this.controlsRefs.volSliderVerticalInput.value = String(Math.round(level * 100));
         });
 
         this.on('mute', (data) => {
             const muted = data.muted;
             this.controlsRefs.muteBtn.innerHTML = svgFromMusicIcon(muted ? 'volMuted' : 'volHigh');
-            this.controlsRefs.muteBtn.title = this.t(
-                muted ? 'tooltip.unmute' : 'tooltip.mute',
-            );
-            this.controlsRefs.volSlider.value = muted ? '0' : String(this.player.volume());
+            this.controlsRefs.muteBtn.title = this.t(muted ? 'tooltip.unmute' : 'tooltip.mute');
+
+            const currentVol = this.player.volume();
+            this.controlsRefs.volSlider.value = muted ? '0' : String(currentVol);
+            this.controlsRefs.volSliderVerticalInput.value = muted
+                ? '0'
+                : String(Math.round(currentVol * 100));
         });
 
         this.on('repeat', (data) => {
@@ -601,6 +778,7 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         const vol = this.player.volume();
         this.controlsRefs.volSlider.value = String(vol);
         this.controlsRefs.volSlider.style.setProperty('--vol-pct', `${vol * 100}%`);
+        this.controlsRefs.volSliderVerticalInput.value = String(Math.round(vol * 100));
 
         this.currentRepeat = this.player.repeatState();
         this.applyRepeatIcon();
@@ -631,6 +809,8 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         this.controlsRefs.shuffleBtn.hidden = opts.showShuffle === false;
         this.controlsRefs.repeatBtn.hidden = opts.showRepeat === false;
         this.controlsRefs.speedBtn.hidden = opts.showSpeed !== true;
+
+        this.applyVolumeMode();
     }
 }
 
