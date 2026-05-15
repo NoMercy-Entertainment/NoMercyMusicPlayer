@@ -195,4 +195,92 @@ describe('MusicUiPlugin — mobile UX fixes', () => {
             expect(vertInput.value).toBe('60');
         });
     });
+
+    // ── In-popup mute button ───────────────────────────────────────────────────
+
+    describe('in-popup mute button', () => {
+        it('renders .nmmusic-vol-popup-mute inside .nmmusic-vol-slider-vertical', async () => {
+            const { player } = setupPlayer({ volumeSlider: 'vertical' });
+            await player.ready();
+
+            const popup = document.querySelector('.nmmusic-vol-slider-vertical');
+            expect(popup).not.toBeNull();
+
+            const popupMuteBtn = popup!.querySelector('.nmmusic-vol-popup-mute');
+            expect(popupMuteBtn).not.toBeNull();
+        });
+
+        it('calls toggleMute when the popup mute button is clicked', async () => {
+            const { player } = setupPlayer({ volumeSlider: 'vertical' });
+            await player.ready();
+
+            const toggleMuteSpy = vi.spyOn(player, 'toggleMute');
+            const popupMuteBtn = document.querySelector<HTMLButtonElement>('.nmmusic-vol-popup-mute');
+            expect(popupMuteBtn).not.toBeNull();
+
+            popupMuteBtn!.click();
+
+            expect(toggleMuteSpy).toHaveBeenCalledOnce();
+        });
+
+        it('does NOT close the popup when the in-popup mute button is clicked', async () => {
+            const { player } = setupPlayer({ volumeSlider: 'vertical' });
+            await player.ready();
+
+            // Open the popup.
+            const muteBtn = document.querySelector<HTMLButtonElement>('[data-action="mute"]')!;
+            muteBtn.click();
+
+            const popup = document.querySelector('.nmmusic-vol-slider-vertical')!;
+            expect(popup.classList.contains('nmmusic-vol-slider-vertical-open')).toBe(true);
+
+            // Click the in-popup mute button — propagation is stopped so popup stays open.
+            const popupMuteBtn = popup.querySelector<HTMLButtonElement>('.nmmusic-vol-popup-mute')!;
+            popupMuteBtn.click();
+
+            expect(popup.classList.contains('nmmusic-vol-slider-vertical-open')).toBe(true);
+        });
+
+        it('updates popup mute icon when mute event fires', async () => {
+            const { player } = setupPlayer({ volumeSlider: 'vertical' });
+            await player.ready();
+
+            const popupMuteBtn = document.querySelector<HTMLButtonElement>('.nmmusic-vol-popup-mute')!;
+
+            player.emit('mute', { muted: true });
+            const mutedHtml = popupMuteBtn.innerHTML;
+
+            player.emit('mute', { muted: false });
+            const unmutedHtml = popupMuteBtn.innerHTML;
+
+            expect(mutedHtml).not.toBe(unmutedHtml);
+        });
+
+        it('syncs popup mute aria-label on mute event', async () => {
+            const { player } = setupPlayer({ volumeSlider: 'vertical' });
+            await player.ready();
+
+            const popupMuteBtn = document.querySelector<HTMLButtonElement>('.nmmusic-vol-popup-mute')!;
+
+            player.emit('mute', { muted: true });
+            const mutedLabel = popupMuteBtn.getAttribute('aria-label');
+
+            player.emit('mute', { muted: false });
+            const unmutedLabel = popupMuteBtn.getAttribute('aria-label');
+
+            expect(mutedLabel).toBeTruthy();
+            expect(unmutedLabel).toBeTruthy();
+            // The plugin uses different translation keys for muted vs unmuted.
+            expect(mutedLabel).not.toBe(unmutedLabel);
+        });
+
+        it('is present in auto mode as well (always constructed)', async () => {
+            const { player } = setupPlayer({ volumeSlider: 'auto' });
+            await player.ready();
+
+            const popup = document.querySelector('.nmmusic-vol-slider-vertical');
+            const popupMuteBtn = popup?.querySelector('.nmmusic-vol-popup-mute');
+            expect(popupMuteBtn).not.toBeNull();
+        });
+    });
 });

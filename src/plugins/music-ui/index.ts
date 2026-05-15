@@ -32,7 +32,10 @@
  *         ├─ .nmmusic-btn[data-action=repeat]   (priority 3)
  *         └─ .nmmusic-volume-group
  *             ├─ .nmmusic-btn[data-action=mute]
- *             └─ input.nmmusic-vol-slider
+ *             ├─ input.nmmusic-vol-slider
+ *             └─ .nmmusic-vol-slider-vertical (popup)
+ *                 ├─ input.nmmusic-vol-slider-vertical-input
+ *                 └─ button.nmmusic-vol-popup-mute
  *
  * Responsive priority: play > prev/next > shuffle/repeat > volume. Lower-
  * priority controls collapse at narrow widths via CSS container queries.
@@ -121,6 +124,7 @@ interface ControlsRefs {
     volSlider: HTMLInputElement;
     volSliderVertical: HTMLDivElement;
     volSliderVerticalInput: HTMLInputElement;
+    volPopupMuteBtn: HTMLButtonElement;
     speedBtn: HTMLButtonElement;
 }
 
@@ -341,7 +345,13 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         volSliderVerticalInput.setAttribute('aria-label', 'Volume');
         volSliderVerticalInput.setAttribute('orient', 'vertical');
 
+        const volPopupMuteBtn = document.createElement('button');
+        volPopupMuteBtn.className = 'nmmusic-btn nmmusic-vol-popup-mute';
+        volPopupMuteBtn.setAttribute('aria-label', this.t('tooltip.mute'));
+        volPopupMuteBtn.innerHTML = svgFromMusicIcon('volHigh', 20);
+
         volSliderVertical.appendChild(volSliderVerticalInput);
+        volSliderVertical.appendChild(volPopupMuteBtn);
         volumeGroup.appendChild(muteBtn);
         volumeGroup.appendChild(volSlider);
         volumeGroup.appendChild(volSliderVertical);
@@ -355,7 +365,7 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         controlsRow.appendChild(volumeGroup);
         this.overlay.appendChild(controlsRow);
 
-        this.wireControls(shuffleBtn, prevBtn, playBtn, nextBtn, repeatBtn, speedBtn, muteBtn, volSlider, volSliderVerticalInput);
+        this.wireControls(shuffleBtn, prevBtn, playBtn, nextBtn, repeatBtn, speedBtn, muteBtn, volSlider, volSliderVerticalInput, volPopupMuteBtn);
 
         return {
             controlsRow,
@@ -369,6 +379,7 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
             volSlider,
             volSliderVertical,
             volSliderVerticalInput,
+            volPopupMuteBtn,
             speedBtn,
         };
     }
@@ -488,6 +499,7 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         muteBtn: HTMLButtonElement,
         volSlider: HTMLInputElement,
         volSliderVerticalInput: HTMLInputElement,
+        volPopupMuteBtn: HTMLButtonElement,
     ): void {
         this.listen(shuffleBtn, 'click', () => {
             void this.player.shuffleState(!this.isShuffle);
@@ -538,6 +550,11 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
             const inputEl = event.target as HTMLInputElement;
             const level = Number(inputEl.value) / 100;
             this.player.volume(level);
+        });
+
+        this.listen(volPopupMuteBtn, 'click', (event: Event) => {
+            event.stopPropagation();
+            this.player.toggleMute();
         });
     }
 
@@ -673,6 +690,12 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
             const muted = data.muted;
             this.controlsRefs.muteBtn.innerHTML = svgFromMusicIcon(muted ? 'volMuted' : 'volHigh');
             this.controlsRefs.muteBtn.title = this.t(muted ? 'tooltip.unmute' : 'tooltip.mute');
+
+            this.controlsRefs.volPopupMuteBtn.innerHTML = svgFromMusicIcon(muted ? 'volMuted' : 'volHigh', 20);
+            this.controlsRefs.volPopupMuteBtn.setAttribute(
+                'aria-label',
+                this.t(muted ? 'tooltip.unmute' : 'tooltip.mute'),
+            );
 
             const currentVol = this.player.volume();
             this.controlsRefs.volSlider.value = muted ? '0' : String(currentVol);

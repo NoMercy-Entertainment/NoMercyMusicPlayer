@@ -31,7 +31,10 @@
  *         ├─ .nmmusic-btn[data-action=repeat]
  *         └─ .nmmusic-volume-group
  *             ├─ .nmmusic-btn[data-action=mute]
- *             └─ input.nmmusic-vol-slider
+ *             ├─ input.nmmusic-vol-slider
+ *             └─ .nmmusic-vol-slider-vertical (popup)
+ *                 ├─ input.nmmusic-vol-slider-vertical-input
+ *                 └─ button.nmmusic-vol-popup-mute
  */
 
 export const STYLE_ELEMENT_ID = 'nmmusic-ui-styles';
@@ -291,8 +294,14 @@ export const musicUiCss = `
 }
 .nmmusic-vol-slider-vertical-open {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+}
+.nmmusic-vol-popup-mute {
+    min-width: 44px;
+    min-height: 44px;
 }
 .nmmusic-vol-slider-vertical-input {
     -webkit-appearance: slider-vertical;
