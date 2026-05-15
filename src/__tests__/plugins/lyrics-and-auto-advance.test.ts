@@ -96,7 +96,13 @@ describe('NMMusicPlayer — lyrics + auto-advance plugins', () => {
 			let nextFired = false;
 			p.on('next' as any, () => { nextFired = true; });
 
-			try { await instance!.advance(); } catch { /* load rejects in test env — next event already fired */ }
+			// advance() dispatches `next` before awaiting backend.load().
+			// Don't await the full Promise — backend load hangs in happy-dom (no
+			// media decoder). Yield one macrotask to flush the _dispatchBefore
+			// microtask chain so the `next` event fires, then assert.
+			void instance!.advance();
+			await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
 			expect(nextFired).toBe(true);
 		});
 	});

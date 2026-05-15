@@ -190,8 +190,8 @@ export class WebAudioBackend implements IAudioBackend {
 
 	// ── Lifecycle ───────────────────────────────────────────────────────────
 
-	async load(url: string, opts: { preload: 'auto' | 'metadata' | 'none' }): Promise<void> {
-		this.element.preload = opts.preload;
+	async load(url: string, opts?: { preload: 'auto' | 'metadata' | 'none' }): Promise<void> {
+		this.element.preload = opts?.preload ?? 'auto';
 		this.currentState = 'loading';
 		this.emit('backend:loading', { url, kind: this.kind });
 
