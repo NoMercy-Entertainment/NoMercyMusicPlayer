@@ -116,7 +116,7 @@ export class DrmPlugin extends Plugin<NMMusicPlayer<any>, DrmOptions, DrmEvents>
 			// Kick off a license fetch through the plugin's auth-aware fetch so
 			// AuthError / NetworkError flow through the standard error pipeline.
 			if (licenseUrl) {
-				try { await this.fetch(licenseUrl, raw => raw, { scope: 'plugin' }); }
+				try { await this.fetch(licenseUrl, { scope: 'plugin' }); }
 				catch { /* fetch errors already surfaced via the standard pipeline. */ }
 			}
 			this.emit('key:granted', { sessionId: '' });
