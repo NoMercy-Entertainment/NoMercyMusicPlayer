@@ -1,5 +1,5 @@
 import { Plugin } from '@nomercy-entertainment/nomercy-player-core';
-import type { NMMusicPlayer } from '../index';
+import type { NMMusicPlayer } from '../../index';
 
 /** Options for the music {@link DrmPlugin}. */
 export interface DrmOptions {

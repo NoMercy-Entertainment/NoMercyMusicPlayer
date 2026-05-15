@@ -86,7 +86,7 @@ describe('NMMusicPlayer — still-unimplemented method inventory', () => {
 
 	describe('backend / loading', () => {
 		it('backend() returns an AudioElementBackend instance (default)', async () => {
-			const { AudioElementBackend } = await import('../player/audio-backend/audioElementBackend');
+			const { AudioElementBackend } = await import('../adapters/audio-backend/html5-audio');
 			const p = player();
 			const b = p.backend();
 			expect(b).toBeInstanceOf(AudioElementBackend);

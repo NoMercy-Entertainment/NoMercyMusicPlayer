@@ -21,8 +21,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NMMusicPlayer } from '../index';
-import { AudioElementBackend } from '../player/audio-backend/audioElementBackend';
-import { WebAudioBackend } from '../player/audio-backend/webAudioBackend';
+import { AudioElementBackend } from '../adapters/audio-backend/html5-audio';
+import { WebAudioBackend } from '../adapters/audio-backend/web-audio';
 
 // ── Web Audio stubs ───────────────────────────────────────────────────────────
 

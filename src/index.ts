@@ -38,9 +38,9 @@ import type {
 	UrlResolver,
 } from '@nomercy-entertainment/nomercy-player-core';
 import type { PreloadStrategy, TransitionStrategy } from '@nomercy-entertainment/nomercy-player-core';
-import type { IAudioBackend } from './player/audio-backend/backend';
-import { AudioElementBackend } from './player/audio-backend/audioElementBackend';
-import { WebAudioBackend } from './player/audio-backend/webAudioBackend';
+import type { IAudioBackend } from './adapters/audio-backend/IAudioBackend';
+import { AudioElementBackend } from './adapters/audio-backend/html5-audio';
+import { WebAudioBackend } from './adapters/audio-backend/web-audio';
 import { MusicPreloadStrategy } from './player/preload';
 import { CrossfadeTransitionStrategy } from '@nomercy-entertainment/nomercy-player-core';
 import type {

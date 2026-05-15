@@ -9,7 +9,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BrowserPolicyError } from '@nomercy-entertainment/nomercy-player-core';
-import { WebAudioBackend } from '../player/audio-backend/webAudioBackend';
+import { WebAudioBackend } from '../adapters/audio-backend/web-audio';
 import { NMMusicPlayer } from '../index';
 
 // ── AudioContext stub ─────────────────────────────────────────────────────────

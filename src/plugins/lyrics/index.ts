@@ -4,8 +4,8 @@ import type {
 	CueList,
 	CueParser,
 } from '@nomercy-entertainment/nomercy-player-core';
-import type { NMMusicPlayer } from '../index';
-import type { MusicPlaylistItem } from '../types';
+import type { NMMusicPlayer } from '../../index';
+import type { MusicPlaylistItem } from '../../types';
 
 /** Events emitted by {@link LyricsPlugin}. */
 export interface LyricsEvents {

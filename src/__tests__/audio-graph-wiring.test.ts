@@ -1,26 +1,27 @@
 /**
  * Audio graph wiring regression.
  *
- * Verifies that the `AudioElementBackend` outputGain node reaches
- * `ctx.destination` — either directly (baseline, no plugin) or through the
- * `AudioGraphPlugin` chain (plugin present).
+ * Root cause of the original silence bug (round 3):
+ *   AudioGraphPlugin was enabled by default and called backend.outputNode(ctx),
+ *   which triggered createMediaElementSource() on a cross-origin <audio> element
+ *   (FMA CDN — no CORS headers). Chrome taints the source and forces silence
+ *   with no error — the element's currentTime still advances.
  *
- * Root cause of the original silence bug:
- *   `ensureSourceGraph` built `source → analyser → outputGain` but never
- *   connected `outputGain → ctx.destination`. AudioGraphPlugin then called
- *   `createMediaElementSource(element)` a second time; Chrome returned a
- *   silent node without throwing. Both paths produced no audio.
+ * Fix (Option A):
+ *   AudioGraphPlugin is now opt-in (disabled by default in musicOptions.ts).
+ *   The <audio> element routes through the native browser output path, which is
+ *   not subject to the CORS-taint rule. Audio is audible without Web Audio.
  *
- * Fix (Option A + baseline):
- *   - `ensureSourceGraph` now connects `outputGain → ctx.destination` so audio
- *     plays even without any plugin.
- *   - `AudioGraphPlugin.mountSource` calls `backend.outputNode(ctx)` and reuses
- *     the backend's outputGain as the chain head, then `rebuildChain` reconnects
- *     it through effects → destination (replacing the baseline connection).
+ * What these tests verify:
+ *   - createMediaElementSource is NOT called at construction or on play() —
+ *     only called when outputNode(ctx) / analyserSource(ctx) is explicitly invoked.
+ *   - When outputNode(ctx) IS called, the graph wires correctly:
+ *       source → analyser → outputGain → destination
+ *   - The call is idempotent — same GainNode returned on repeated calls.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AudioElementBackend } from '../player/audio-backend/audioElementBackend';
+import { AudioElementBackend } from '../adapters/audio-backend/html5-audio';
 
 // ── Web Audio stubs ───────────────────────────────────────────────────────────
 
@@ -184,5 +185,39 @@ describe('AudioElementBackend — ensureSourceGraph baseline wiring', () => {
 
 		const analyserNode = (ctx.createAnalyser as ReturnType<typeof vi.fn>).mock.results[0]?.value;
 		expect(analyserTap).toBe(analyserNode);
+	});
+
+	it('does NOT call createMediaElementSource at construction (graph is opt-in)', () => {
+		const container = document.createElement('div');
+		document.body.appendChild(container);
+
+		const backend = new AudioElementBackend(container);
+		const ctx = new MockAudioContext() as unknown as AudioContext;
+
+		// Construction alone must not touch Web Audio.
+		expect(ctx.createMediaElementSource).not.toHaveBeenCalled();
+
+		void backend;
+	});
+
+	it('does NOT call createMediaElementSource unless outputNode() or analyserSource() is invoked', () => {
+		const container = document.createElement('div');
+		document.body.appendChild(container);
+
+		const backend = new AudioElementBackend(container);
+		const ctx = new MockAudioContext() as unknown as AudioContext;
+
+		// Transport calls must not build the graph.
+		backend.volume(0.8);
+		backend.playbackRate(1.0);
+		backend.mute();
+		backend.unmute();
+		backend.state();
+		backend.buffered();
+		backend.duration();
+
+		expect(ctx.createMediaElementSource).not.toHaveBeenCalled();
+
+		void backend;
 	});
 });

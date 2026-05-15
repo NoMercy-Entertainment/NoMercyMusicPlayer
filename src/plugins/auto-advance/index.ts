@@ -1,6 +1,6 @@
 import { Plugin } from '@nomercy-entertainment/nomercy-player-core';
-import type { NMMusicPlayer } from '../index';
-import type { MusicPlaylistItem } from '../types';
+import type { NMMusicPlayer } from '../../index';
+import type { MusicPlaylistItem } from '../../types';
 
 /** Options for {@link AutoAdvancePlugin}. */
 export interface AutoAdvanceOptions {

@@ -1,6 +1,6 @@
 import { KeyHandlerPlugin as BaseKeyHandler } from '@nomercy-entertainment/nomercy-player-core/plugins/key-handler';
-import type { NMMusicPlayer } from '../index';
-import { RepeatState, ShuffleState } from '../types';
+import type { NMMusicPlayer } from '../../index';
+import { RepeatState, ShuffleState } from '../../types';
 
 
 /**

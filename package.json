@@ -30,73 +30,97 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
 		},
+		"./adapters": {
+			"types": "./dist/adapters/index.d.ts",
+			"import": "./dist/adapters/index.js"
+		},
+		"./adapters/audio-backend": {
+			"types": "./dist/adapters/audio-backend/index.d.ts",
+			"import": "./dist/adapters/audio-backend/index.js"
+		},
+		"./adapters/playlist-generator": {
+			"types": "./dist/adapters/playlist-generator/index.d.ts",
+			"import": "./dist/adapters/playlist-generator/index.js"
+		},
+		"./adapters/similarity-engine": {
+			"types": "./dist/adapters/similarity-engine/index.d.ts",
+			"import": "./dist/adapters/similarity-engine/index.js"
+		},
+		"./adapters/scrobbler": {
+			"types": "./dist/adapters/scrobbler/index.d.ts",
+			"import": "./dist/adapters/scrobbler/index.js"
+		},
+		"./adapters/lyric-source": {
+			"types": "./dist/adapters/lyric-source/index.d.ts",
+			"import": "./dist/adapters/lyric-source/index.js"
+		},
+		"./adapters/now-playing-art": {
+			"types": "./dist/adapters/now-playing-art/index.d.ts",
+			"import": "./dist/adapters/now-playing-art/index.js"
+		},
 		"./plugins": {
 			"types": "./dist/plugins/index.d.ts",
 			"import": "./dist/plugins/index.js"
 		},
 		"./plugins/auto-advance": {
-			"types": "./dist/plugins/auto-advance.d.ts",
-			"import": "./dist/plugins/auto-advance.js"
+			"types": "./dist/plugins/auto-advance/index.d.ts",
+			"import": "./dist/plugins/auto-advance/index.js"
+		},
+		"./plugins/cast-sender": {
+			"types": "./dist/plugins/cast-sender/index.d.ts",
+			"import": "./dist/plugins/cast-sender/index.js"
+		},
+		"./plugins/drm": {
+			"types": "./dist/plugins/drm/index.d.ts",
+			"import": "./dist/plugins/drm/index.js"
+		},
+		"./plugins/embed": {
+			"types": "./dist/plugins/embed/index.d.ts",
+			"import": "./dist/plugins/embed/index.js"
 		},
 		"./plugins/equalizer": {
 			"types": "./dist/plugins/equalizer/index.d.ts",
 			"import": "./dist/plugins/equalizer/index.js"
 		},
-		"./plugins/spectrum": {
-			"types": "./dist/plugins/spectrum.d.ts",
-			"import": "./dist/plugins/spectrum.js"
-		},
-		"./plugins/lyrics": {
-			"types": "./dist/plugins/lyrics.d.ts",
-			"import": "./dist/plugins/lyrics.js"
-		},
-		"./plugins/visualization": {
-			"types": "./dist/plugins/visualization.d.ts",
-			"import": "./dist/plugins/visualization.js"
-		},
-		"./plugins/tab-leader": {
-			"types": "./dist/plugins/tab-leader.d.ts",
-			"import": "./dist/plugins/tab-leader.js"
-		},
-		"./plugins/media-session": {
-			"types": "./dist/plugins/media-session.d.ts",
-			"import": "./dist/plugins/media-session.js"
+		"./plugins/group-listening": {
+			"types": "./dist/plugins/group-listening/index.d.ts",
+			"import": "./dist/plugins/group-listening/index.js"
 		},
 		"./plugins/key-handler": {
-			"types": "./dist/plugins/key-handler.d.ts",
-			"import": "./dist/plugins/key-handler.js"
-		},
-		"./plugins/message": {
-			"types": "./dist/plugins/message.d.ts",
-			"import": "./dist/plugins/message.js"
-		},
-		"./plugins/embed": {
-			"types": "./dist/plugins/embed.d.ts",
-			"import": "./dist/plugins/embed.js"
+			"types": "./dist/plugins/key-handler/index.d.ts",
+			"import": "./dist/plugins/key-handler/index.js"
 		},
 		"./plugins/live-transcoding": {
-			"types": "./dist/plugins/live-transcoding.d.ts",
-			"import": "./dist/plugins/live-transcoding.js"
+			"types": "./dist/plugins/live-transcoding/index.d.ts",
+			"import": "./dist/plugins/live-transcoding/index.js"
 		},
-		"./plugins/group-listening": {
-			"types": "./dist/plugins/group-listening.d.ts",
-			"import": "./dist/plugins/group-listening.js"
+		"./plugins/lyrics": {
+			"types": "./dist/plugins/lyrics/index.d.ts",
+			"import": "./dist/plugins/lyrics/index.js"
 		},
-		"./plugins/drm": {
-			"types": "./dist/plugins/drm.d.ts",
-			"import": "./dist/plugins/drm.js"
+		"./plugins/media-session": {
+			"types": "./dist/plugins/media-session/index.d.ts",
+			"import": "./dist/plugins/media-session/index.js"
 		},
-		"./plugins/cast-sender": {
-			"types": "./dist/plugins/cast-sender.d.ts",
-			"import": "./dist/plugins/cast-sender.js"
+		"./plugins/message": {
+			"types": "./dist/plugins/message/index.d.ts",
+			"import": "./dist/plugins/message/index.js"
 		},
-		"./backends/audio-element": {
-			"types": "./dist/backends/audio-element.d.ts",
-			"import": "./dist/backends/audio-element.js"
+		"./plugins/music-ui": {
+			"types": "./dist/plugins/music-ui/index.d.ts",
+			"import": "./dist/plugins/music-ui/index.js"
 		},
-		"./backends/web-audio": {
-			"types": "./dist/backends/web-audio.d.ts",
-			"import": "./dist/backends/web-audio.js"
+		"./plugins/spectrum": {
+			"types": "./dist/plugins/spectrum/index.d.ts",
+			"import": "./dist/plugins/spectrum/index.js"
+		},
+		"./plugins/tab-leader": {
+			"types": "./dist/plugins/tab-leader/index.d.ts",
+			"import": "./dist/plugins/tab-leader/index.js"
+		},
+		"./plugins/visualization": {
+			"types": "./dist/plugins/visualization/index.d.ts",
+			"import": "./dist/plugins/visualization/index.js"
 		},
 		"./streams/native": {
 			"types": "./dist/streams/native.d.ts",

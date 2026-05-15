@@ -1,5 +1,5 @@
 import type { BaseEventMap, BasePlayerConfig, BasePlaylistItem } from '@nomercy-entertainment/nomercy-player-core';
-import type { IAudioBackend } from './player/audio-backend/backend';
+import type { IAudioBackend } from './adapters/audio-backend/IAudioBackend';
 
 export interface ArtistRef {
 	id: string | number;

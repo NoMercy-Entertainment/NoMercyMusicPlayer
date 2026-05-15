@@ -8,9 +8,9 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AudioElementBackend } from '../player/audio-backend/audioElementBackend';
-import { WebAudioBackend } from '../player/audio-backend/webAudioBackend';
-import type { IAudioBackend } from '../player/audio-backend/backend';
+import { AudioElementBackend } from '../adapters/audio-backend/html5-audio';
+import { WebAudioBackend } from '../adapters/audio-backend/web-audio';
+import type { IAudioBackend } from '../adapters/audio-backend/IAudioBackend';
 
 // ── Web Audio stubs ───────────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 import { Plugin } from '@nomercy-entertainment/nomercy-player-core';
 import type { IRealtimeChannel } from '@nomercy-entertainment/nomercy-player-core';
-import type { NMMusicPlayer } from '../index';
+import type { NMMusicPlayer } from '../../index';
 
 /** Options for the music {@link LiveTranscodingPlugin}. */
 export interface LiveTranscodingOptions {

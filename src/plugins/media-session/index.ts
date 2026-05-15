@@ -1,7 +1,7 @@
 import { MediaSessionPlugin as BaseMediaSession } from '@nomercy-entertainment/nomercy-player-core/plugins/media-session';
 import type { MediaSessionMetadata } from '@nomercy-entertainment/nomercy-player-core/plugins/media-session';
-import type { NMMusicPlayer } from '../index';
-import type { MusicPlaylistItem } from '../types';
+import type { NMMusicPlayer } from '../../index';
+import type { MusicPlaylistItem } from '../../types';
 
 /** Loose shape covering both the canonical `MusicPlaylistItem` and ad-hoc items. */
 interface MusicMetadataSource {

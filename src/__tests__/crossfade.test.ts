@@ -8,7 +8,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NMMusicPlayer } from '../index';
-import type { IAudioBackend } from '../player/audio-backend/backend';
+import type { IAudioBackend } from '../adapters/audio-backend/IAudioBackend';
 import type { MusicPlaylistItem } from '../types';
 
 // ── Mock backend ──────────────────────────────────────────────────────────────
