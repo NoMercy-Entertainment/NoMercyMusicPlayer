@@ -15,7 +15,7 @@
 	"contributors": [
 		"Stoney Eagle <stoney@nomercy.tv>"
 	],
-	"homepage": "https://nomercy.tv/player",
+	"homepage": "https://docs.nomercy.tv/player/music/",
 	"bugs": {
 		"url": "https://github.com/NoMercy-Entertainment/nomercy-music-player/issues"
 	},
@@ -29,7 +29,11 @@
 	"sideEffects": false,
 	"files": [
 		"dist",
-		"src"
+		"CHANGELOG.md",
+		"MIGRATION.md",
+		"CODE_OF_CONDUCT.md",
+		"CONTRIBUTING.md",
+		"SECURITY.md"
 	],
 	"exports": {
 		".": {
@@ -146,7 +150,7 @@
 		"NoMercy"
 	],
 	"dependencies": {
-		"@nomercy-entertainment/nomercy-player-core": "^2.0.0"
+		"@nomercy-entertainment/nomercy-player-core": "2.0.0-beta.0"
 	},
 	"peerDependencies": {
 		"audiomotion-analyzer": ">=4.5.0",
@@ -173,6 +177,7 @@
 		"vitest": "^4.1.5"
 	},
 	"publishConfig": {
-		"access": "public"
+		"access": "public",
+		"tag": "beta"
 	}
 }

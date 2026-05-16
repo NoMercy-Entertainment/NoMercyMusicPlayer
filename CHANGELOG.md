@@ -1,6 +1,6 @@
 # Changelog — @nomercy-entertainment/nomercy-music-player
 
-## [2.0.0] — 2026-05-16
+## [2.0.0-beta.0] — 2026-05-16
 
 Stable release. Built on `@nomercy-entertainment/nomercy-player-core` 2.0.0 (the shared
 player kit). All API surface from alpha is stabilized.

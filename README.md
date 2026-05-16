@@ -1,9 +1,8 @@
-[![npm](https://img.shields.io/npm/v/@nomercy-entertainment/nomercy-music-player)](https://www.npmjs.com/package/@nomercy-entertainment/nomercy-music-player)
+[![npm](https://img.shields.io/npm/v/@nomercy-entertainment/nomercy-music-player/beta?label=beta)](https://www.npmjs.com/package/@nomercy-entertainment/nomercy-music-player)
 [![license](https://img.shields.io/npm/l/@nomercy-entertainment/nomercy-music-player)](./LICENSE)
-[![types](https://img.shields.io/npm/types/@nomercy-entertainment/nomercy-music-player)](https://www.npmjs.com/package/@nomercy-entertainment/nomercy-music-player)
 [![bundlephobia](https://img.shields.io/bundlephobia/minzip/@nomercy-entertainment/nomercy-music-player)](https://bundlephobia.com/package/@nomercy-entertainment/nomercy-music-player)
 
-Live demo: https://nomercy.tv/player
+Full documentation: https://docs.nomercy.tv/player/music/
 
 # nomercy-music-player
 
