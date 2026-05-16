@@ -718,8 +718,15 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
             const item = isMusicItem(data.item) ? data.item : null;
             this.applyCurrentTrack(item);
 
-            this.cachedDuration = 0;
-            this.progressRefs.durationTimeEl.textContent = '0:00';
+            // If duration is already known for the new track (e.g. the
+            // backend cached metadata or `duration` fired before this
+            // `current` listener), preserve it instead of stalling the
+            // display at 0:00 until the user scrubs. next() races
+            // duration→current in some backends — the display was stuck
+            // at 0:00 across track changes when current arrived second.
+            const dur = this.player.duration();
+            this.cachedDuration = dur > 0 ? dur : 0;
+            this.progressRefs.durationTimeEl.textContent = dur > 0 ? fmt(dur) : '0:00';
             this.progressRefs.currentTimeEl.textContent = '0:00';
             this.updateSeekPosition(0, this.progressRefs.seekFill, this.progressRefs.seekThumb, this.progressRefs.seekBar);
         });
