@@ -7,10 +7,13 @@ import {
 	initPlayerCoreState,
 	MediaFormatError,
 	NetworkState,
+	NotImplementedError,
 	playerCoreMethods,
 	resolvePlayerConstructor,
 	VisibilityState,
 } from '@nomercy-entertainment/nomercy-player-core';
+
+export { NotImplementedError } from '@nomercy-entertainment/nomercy-player-core';
 import type {
 	ActionOptions,
 	AudioTrack,
@@ -569,6 +572,15 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 // Compose every shared player method onto the prototype. The kit's logic
 // gets wired into the class here — no inheritance, no per-library duplication.
 composeMixins(NMMusicPlayer.prototype, ...playerCoreMethods);
+
+// Override mixin-installed `subtitles()` — audio backends don't expose subtitle
+// tracks. Throw so consumers know this is structural, not just an empty list.
+NMMusicPlayer.prototype.subtitles = function (): never {
+	throw new NotImplementedError(
+		'Music backends don\'t expose subtitle tracks. Use a video player for subtitle support.',
+		'subtitles',
+	);
+};
 
 {
 	const composedDispose = NMMusicPlayer.prototype.dispose as () => void;

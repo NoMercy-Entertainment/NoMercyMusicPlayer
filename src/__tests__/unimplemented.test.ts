@@ -231,10 +231,10 @@ describe('NMMusicPlayer — still-unimplemented method inventory', () => {
 	});
 
 	describe('tracks / chapters / quality (delegated to backend; empty when audio backend has no tracks)', () => {
-		it('subtitles returns [] — audio backend exposes no subtitle tracks', async () => {
+		it('subtitles throws NotImplementedError — audio backends do not expose subtitle tracks', async () => {
 			const p = player();
 			await p.ready();
-			expect(p.subtitles()).toEqual([]);
+			expect(() => p.subtitles()).toThrow('Music backends don\'t expose subtitle tracks');
 		});
 		it('currentSubtitle is a no-op on audio (no backend track support); emits subtitle event', async () => {
 			const p = player();
@@ -356,12 +356,14 @@ describe('NMMusicPlayer — still-unimplemented method inventory', () => {
 			const p = player();
 			await p.ready();
 			const m = p.metrics();
-			expect(typeof m.ttfb).toBe('number');
+			// ttfb / avgBitrate / decoderStalls / droppedFrames — null on audio backends
+			expect(m.ttfb).toBeNull();
+			expect(m.avgBitrate).toBeNull();
+			expect(m.decoderStalls).toBeNull();
+			expect(m.droppedFrames).toBeNull();
+			// always-number counters
 			expect(typeof m.ttff).toBe('number');
 			expect(typeof m.rebufferRatio).toBe('number');
-			expect(typeof m.avgBitrate).toBe('number');
-			expect(typeof m.droppedFrames).toBe('number');
-			expect(typeof m.decoderStalls).toBe('number');
 			expect(typeof m.joinTime).toBe('number');
 			expect(typeof m.sessionDurationMs).toBe('number');
 			expect(m.sessionDurationMs).toBeGreaterThanOrEqual(0);

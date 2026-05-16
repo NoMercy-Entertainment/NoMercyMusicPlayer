@@ -10,6 +10,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NotImplementedError } from '@nomercy-entertainment/nomercy-player-core';
 import { NMMusicPlayer } from '../../index';
 import { KeyHandlerPlugin } from '../../plugins/key-handler';
 import { MediaSessionPlugin } from '../../plugins/media-session';
@@ -264,110 +265,45 @@ describe('NMMusicPlayer — remaining plugin stubs', () => {
 		});
 	});
 
-	describe('drmPlugin', () => {
-		it("use() does not throw on a host without `requestMediaKeySystemAccess`; emits 'unsupported'", async () => {
-			const originalNav = (globalThis as { navigator?: Navigator }).navigator;
-			const stubbedNav = { ...originalNav } as Navigator & { requestMediaKeySystemAccess?: unknown };
-			delete (stubbedNav as { requestMediaKeySystemAccess?: unknown }).requestMediaKeySystemAccess;
-			Object.defineProperty(globalThis, 'navigator', {
-				value: stubbedNav,
-				configurable: true,
-				writable: true,
-			});
+	describe('drmPlugin — v2.0 stub', () => {
+		it('emits plugin:failed with NotImplementedError; player still reaches ready', async () => {
+			const p = setup();
+			const failedErrors: Error[] = [];
+			p.on('plugin:failed' as any, (data: any) => { failedErrors.push(data?.error); });
+			p.addPlugin(DrmPlugin, { keySystem: 'com.widevine.alpha', licenseUrl: 'https://example.com/license' });
+			await p.ready();
 
-			try {
-				const p = setup();
-				const events: Array<{ event: string; reason?: string }> = [];
-				p.on('plugin:music-drm:unsupported' as any, (data: any) => {
-					events.push({ event: 'unsupported', reason: data?.reason });
-				});
-
-				p.addPlugin(DrmPlugin, { keySystem: 'com.widevine.alpha', licenseUrl: 'https://example.com/license' });
-				await p.ready();
-
-				const instance = p.getPlugin(DrmPlugin);
-				expect(instance).toBeInstanceOf(DrmPlugin);
-				if (!instance) throw new Error('DrmPlugin not registered');
-				expect(instance.isSupported()).toBe(false);
-				expect(events.find(e => e.reason === 'no-eme')).toBeDefined();
-			}
-			finally {
-				if (originalNav) {
-					Object.defineProperty(globalThis, 'navigator', {
-						value: originalNav,
-						configurable: true,
-						writable: true,
-					});
-				}
-			}
+			expect(failedErrors).toHaveLength(1);
+			expect(failedErrors[0]).toBeInstanceOf(NotImplementedError);
+			expect(failedErrors[0]?.message).toMatch('DrmPlugin: roadmapped for v2.1');
 		});
 	});
 
-	describe('groupListeningPlugin', () => {
-		it('use() opens a websocket against opts.wsUrl', async () => {
-			const seen: string[] = [];
-			const originalWS = globalThis.WebSocket;
-			class StubWS {
-				static readonly CONNECTING = 0;
-				static readonly OPEN = 1;
-				static readonly CLOSING = 2;
-				static readonly CLOSED = 3;
-				readyState = 0;
-				constructor(url: string) {
-					seen.push(url);
-				}
-				addEventListener(): void {}
-				removeEventListener(): void {}
-				send(): void {}
-				close(): void {}
-			}
-			(globalThis as { WebSocket: any }).WebSocket = StubWS as any;
-			try {
-				const p = setup();
-				p.addPlugin(GroupListeningPlugin, { wsUrl: 'ws://test/group' });
-				await p.ready();
-				expect(seen).toContain('ws://test/group');
-				const instance = p.getPlugin(GroupListeningPlugin);
-				expect(instance).toBeInstanceOf(GroupListeningPlugin);
-			}
-			finally {
-				(globalThis as { WebSocket: any }).WebSocket = originalWS;
-			}
+	describe('groupListeningPlugin — v2.0 stub', () => {
+		it('emits plugin:failed with NotImplementedError; player still reaches ready', async () => {
+			const p = setup();
+			const failedErrors: Error[] = [];
+			p.on('plugin:failed' as any, (data: any) => { failedErrors.push(data?.error); });
+			p.addPlugin(GroupListeningPlugin, { wsUrl: 'ws://test/group' });
+			await p.ready();
+
+			expect(failedErrors).toHaveLength(1);
+			expect(failedErrors[0]).toBeInstanceOf(NotImplementedError);
+			expect(failedErrors[0]?.message).toMatch('GroupListeningPlugin: roadmapped for v2.1');
 		});
 	});
 
-	describe('liveTranscodingPlugin', () => {
-		it('use() opens a websocket against opts.wsUrl', async () => {
-			const seen: string[] = [];
-			const originalWS = globalThis.WebSocket;
-			class StubWS {
-				static readonly CONNECTING = 0;
-				static readonly OPEN = 1;
-				static readonly CLOSING = 2;
-				static readonly CLOSED = 3;
-				readyState = 0;
-				constructor(url: string) {
-					seen.push(url);
-				}
-				addEventListener(): void {}
-				removeEventListener(): void {}
-				send(): void {}
-				close(): void {}
-			}
-			(globalThis as { WebSocket: any }).WebSocket = StubWS as any;
-			try {
-				const p = setup();
-				p.addPlugin(LiveTranscodingPlugin, { wsUrl: 'ws://test/live' });
-				await p.ready();
-				expect(seen).toContain('ws://test/live');
-				const instance = p.getPlugin(LiveTranscodingPlugin);
-				expect(instance).toBeInstanceOf(LiveTranscodingPlugin);
-				if (!instance) throw new Error('LiveTranscodingPlugin not registered');
-				expect(instance.readyTime()).toBe(0);
-			}
-			finally {
-				(globalThis as { WebSocket: any }).WebSocket = originalWS;
-			}
+	describe('liveTranscodingPlugin — v2.0 stub', () => {
+		it('emits plugin:failed with NotImplementedError; player still reaches ready', async () => {
+			const p = setup();
+			const failedErrors: Error[] = [];
+			p.on('plugin:failed' as any, (data: any) => { failedErrors.push(data?.error); });
+			p.addPlugin(LiveTranscodingPlugin, { wsUrl: 'ws://test/live' });
+			await p.ready();
+
+			expect(failedErrors).toHaveLength(1);
+			expect(failedErrors[0]).toBeInstanceOf(NotImplementedError);
+			expect(failedErrors[0]?.message).toMatch('LiveTranscodingPlugin: roadmapped for v2.1');
 		});
 	});
 

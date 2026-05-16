@@ -16,12 +16,23 @@ export default defineConfig({
 				find: '@nomercy-entertainment/nomercy-player-core/vite-plugin',
 				replacement: `${kitRoot}/vite-plugin.ts`,
 			},
-			// Subpath plugin imports — must be more specific than the bare-package
-			// alias below, and resolved as a regex prefix so any plugin file is
-			// served from the kit src tree.
+			// Directory-based plugins whose entry is index.ts, not a bare file.
+			// These must be listed before the regex catch-all below.
+			{ find: '@nomercy-entertainment/nomercy-player-core/plugins/key-handler', replacement: `${kitRoot}/plugins/key-handler/index.ts` },
+			{ find: '@nomercy-entertainment/nomercy-player-core/plugins/media-session', replacement: `${kitRoot}/plugins/media-session/index.ts` },
+			{ find: '@nomercy-entertainment/nomercy-player-core/plugins/tab-leader', replacement: `${kitRoot}/plugins/tab-leader/index.ts` },
+			{ find: '@nomercy-entertainment/nomercy-player-core/plugins/embed', replacement: `${kitRoot}/plugins/embed/index.ts` },
+			{ find: '@nomercy-entertainment/nomercy-player-core/plugins/message', replacement: `${kitRoot}/plugins/message/index.ts` },
+			{ find: '@nomercy-entertainment/nomercy-player-core/plugins/audio-graph', replacement: `${kitRoot}/plugins/audio-graph/index.ts` },
+			{ find: '@nomercy-entertainment/nomercy-player-core/plugins/canvas', replacement: `${kitRoot}/plugins/canvas/index.ts` },
+			{ find: '@nomercy-entertainment/nomercy-player-core/plugins/mixer', replacement: `${kitRoot}/plugins/mixer/index.ts` },
+			{ find: '@nomercy-entertainment/nomercy-player-core/plugins/equalizer', replacement: `${kitRoot}/plugins/equalizer/index.ts` },
+			{ find: '@nomercy-entertainment/nomercy-player-core/plugins/spectrum', replacement: `${kitRoot}/plugins/spectrum/index.ts` },
+			{ find: '@nomercy-entertainment/nomercy-player-core/plugins/visualization', replacement: `${kitRoot}/plugins/visualization/index.ts` },
 			{
-				find: /^@nomercy-entertainment\/nomercy-player-core\/plugins\/(.+)$/,
-				replacement: `${kitRoot}/plugins/$1.ts`,
+				// Remaining subpath imports that resolve to bare .ts files (streams/*, cues/*).
+				find: /^@nomercy-entertainment\/nomercy-player-core\/(.*)$/,
+				replacement: `${kitRoot}/$1.ts`,
 			},
 			{
 				find: '@nomercy-entertainment/nomercy-player-core',
