@@ -19,9 +19,13 @@ import type {
 	AudioTrack,
 	AuthConfig,
 	BasePlaylistItem,
+	CanPlayResult,
 	CastState,
 	Chapter,
 	CueParser,
+	CurrentAudioTrackSelection,
+	CurrentQualitySelection,
+	CurrentSubtitleSelection,
 	DeviceCapabilities,
 	IPlayer,
 	TimeState as KitTimeState,
@@ -137,7 +141,10 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	declare audioContext: () => AudioContext | undefined;
 	declare experimental: PlayerExperimental;
 
-	declare t: (key: string, vars?: Record<string, string>) => string;
+	declare t: {
+		(key: string, vars?: Record<string, string>): string;
+		(PluginClass: PluginCtorWithId, key: string, vars?: Record<string, string>): string;
+	};
 	declare language: {
 		(): string;
 		(lang: string): Promise<void>;
@@ -492,7 +499,7 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	declare device: () => DeviceCapabilities;
 
 	// ── MediaCapabilities + ABR ── composed in via `abrMethods` mixin.
-	declare canPlay: (profile: { contentType: string; width?: number; height?: number; bitrate?: number; framerate?: number }) => Promise<MediaCapabilitiesDecodingInfo>;
+	declare canPlay: (profile: { contentType: string; width?: number; height?: number; bitrate?: number; framerate?: number }) => Promise<CanPlayResult>;
 	declare bandwidth: () => number;
 	declare bandwidthEstimator: {
 		(): (() => number) | undefined;
@@ -510,17 +517,17 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	// ── Tracks / chapters / quality ── composed in via `mediaTracksMethods` mixin.
 	declare subtitles: () => SubtitleTrack[];
 	declare currentSubtitle: {
-		(): number | null;
+		(): CurrentSubtitleSelection | null;
 		(idx: number | null): void;
 	};
 	declare audioTracks: () => AudioTrack[];
 	declare currentAudioTrack: {
-		(): number | null;
+		(): CurrentAudioTrackSelection | null;
 		(idx: number): void;
 	};
 	declare qualityLevels: () => QualityLevel[];
 	declare currentQuality: {
-		(): number | 'auto';
+		(): CurrentQualitySelection | 'auto';
 		(idx: number | 'auto'): void;
 	};
 	declare chapters: () => Chapter[];

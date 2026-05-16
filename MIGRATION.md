@@ -1,5 +1,24 @@
 # Migration
 
+## beta.0 → beta.1 breaking change
+
+`currentSubtitle()`, `currentAudioTrack()`, and `currentQuality()` now return
+selection objects instead of bare indexes.
+
+```ts
+// Before (beta.0)
+const idx: number | null = player.currentAudioTrack();
+
+// After (beta.1)
+const sel = player.currentAudioTrack(); // CurrentAudioTrackSelection | null
+sel?.index;  // number
+sel?.track;  // AudioTrack
+```
+
+Setter forms are unchanged. Full details in the kit migration guide.
+
+---
+
 Full v1 → v2 migration guide lives in the docs site:
 
 **[docs.nomercy.tv/player/music/migration-v1-v2](https://docs.nomercy.tv/player/music/migration-v1-v2)**

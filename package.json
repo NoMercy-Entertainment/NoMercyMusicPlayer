@@ -1,6 +1,6 @@
 {
 	"name": "@nomercy-entertainment/nomercy-music-player",
-	"version": "2.0.0-beta.0",
+	"version": "2.0.0-beta.1",
 	"description": "Headless, plugin-driven music player engine. HLS-ready, crossfade-capable, externally-orchestratable, leak-tested.",
 	"type": "module",
 	"main": "./dist/index.js",
@@ -150,7 +150,7 @@
 		"NoMercy"
 	],
 	"dependencies": {
-		"@nomercy-entertainment/nomercy-player-core": "2.0.0-beta.0"
+		"@nomercy-entertainment/nomercy-player-core": "2.0.0-beta.1"
 	},
 	"peerDependencies": {
 		"audiomotion-analyzer": ">=4.5.0",
