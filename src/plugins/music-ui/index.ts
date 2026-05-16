@@ -717,6 +717,11 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         this.on('current', (data) => {
             const item = isMusicItem(data.item) ? data.item : null;
             this.applyCurrentTrack(item);
+
+            this.cachedDuration = 0;
+            this.progressRefs.durationTimeEl.textContent = '0:00';
+            this.progressRefs.currentTimeEl.textContent = '0:00';
+            this.updateSeekPosition(0, this.progressRefs.seekFill, this.progressRefs.seekThumb, this.progressRefs.seekBar);
         });
 
         this.on('crossfadeStart', () => {
