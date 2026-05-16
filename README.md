@@ -1,6 +1,15 @@
+[![npm](https://img.shields.io/npm/v/@nomercy-entertainment/nomercy-music-player)](https://www.npmjs.com/package/@nomercy-entertainment/nomercy-music-player)
+[![license](https://img.shields.io/npm/l/@nomercy-entertainment/nomercy-music-player)](./LICENSE)
+[![types](https://img.shields.io/npm/types/@nomercy-entertainment/nomercy-music-player)](https://www.npmjs.com/package/@nomercy-entertainment/nomercy-music-player)
+[![bundlephobia](https://img.shields.io/bundlephobia/minzip/@nomercy-entertainment/nomercy-music-player)](https://bundlephobia.com/package/@nomercy-entertainment/nomercy-music-player)
+
+Live demo: https://nomercy.tv/player
+
 # nomercy-music-player
 
 Headless reference music player built on nomercy-player-core. Adapter-driven.
+
+> **Upgrading from v1?** See [MIGRATION.md](./MIGRATION.md) for the full breaking-change list — renamed methods, changed event payloads, and the `item.path` → `item.url` field rename that breaks silently if missed. Group listening queue serialization is particularly sensitive to this change.
 
 ```
 npm install @nomercy-entertainment/nomercy-music-player
