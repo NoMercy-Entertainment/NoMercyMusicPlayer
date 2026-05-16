@@ -74,6 +74,14 @@ export class AudioElementBackend implements IAudioBackend {
 			else {
 				this.element = document.createElement('audio');
 				this.element.preload = 'metadata';
+				// crossOrigin is required for AudioGraph's createMediaElementSource()
+				// to draw real samples on cross-origin sources. Without it, Web Audio
+				// taints the element and outputs zeroes on any track served from a
+				// different origin — every FMA / nomercy-media track silently dies.
+				// `anonymous` triggers a CORS preflight on the audio fetch; origins
+				// that respond with `Access-Control-Allow-Origin: *` (GitHub raw,
+				// most CDNs) deliver real samples. Same-origin tracks are unaffected.
+				this.element.crossOrigin = 'anonymous';
 				this.ownsElement = true;
 				if (container) container.appendChild(this.element);
 			}
@@ -452,6 +460,9 @@ export class AudioElementBackend implements IAudioBackend {
 
 		const el = document.createElement('audio');
 		el.preload = 'auto';
+		// See primary-element createElement above — required for AudioGraph
+		// to read real samples from cross-origin tracks during crossfade.
+		el.crossOrigin = 'anonymous';
 		el.volume = 0;
 		el.style.display = 'none';
 		if (this.container) {
