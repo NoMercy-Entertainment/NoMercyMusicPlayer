@@ -327,9 +327,9 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         volSlider.type = 'range';
         volSlider.className = 'nmmusic-vol-slider';
         volSlider.min = '0';
-        volSlider.max = '1';
-        volSlider.step = '0.01';
-        volSlider.value = '1';
+        volSlider.max = '100';
+        volSlider.step = '1';
+        volSlider.value = '100';
         volSlider.setAttribute('aria-label', 'Volume');
 
         const volSliderVertical = document.createElement('div');
@@ -543,13 +543,12 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
 
         this.listen(volSlider, 'input', (event: Event) => {
             const inputEl = event.target as HTMLInputElement;
-            this.player.volume(parseFloat(inputEl.value));
+            this.player.volume(Number(inputEl.value));
         });
 
         this.listen(volSliderVerticalInput, 'input', (event: Event) => {
             const inputEl = event.target as HTMLInputElement;
-            const level = Number(inputEl.value) / 100;
-            this.player.volume(level);
+            this.player.volume(Number(inputEl.value));
         });
 
         this.listen(volPopupMuteBtn, 'click', (event: Event) => {
@@ -636,7 +635,7 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
     private openVerticalVolSlider(): void {
         const { volSliderVertical, volSliderVerticalInput } = this.controlsRefs;
         const currentLevel = this.player.volume();
-        volSliderVerticalInput.value = String(Math.round(currentLevel * 100));
+        volSliderVerticalInput.value = String(Math.round(currentLevel));
         volSliderVertical.classList.add('nmmusic-vol-slider-vertical-open');
         this._volSliderVerticalOpen = true;
     }
@@ -680,10 +679,10 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
         });
 
         this.on('volume', (data) => {
-            const level = data.level;
+            const level = Math.round(Math.max(0, Math.min(100, data.level)));
             this.controlsRefs.volSlider.value = String(level);
-            this.controlsRefs.volSlider.style.setProperty('--vol-pct', `${level * 100}%`);
-            this.controlsRefs.volSliderVerticalInput.value = String(Math.round(level * 100));
+            this.controlsRefs.volSlider.style.setProperty('--vol-pct', `${level}%`);
+            this.controlsRefs.volSliderVerticalInput.value = String(level);
         });
 
         this.on('mute', (data) => {
@@ -697,11 +696,9 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
                 this.t(muted ? 'tooltip.unmute' : 'tooltip.mute'),
             );
 
-            const currentVol = this.player.volume();
+            const currentVol = Math.round(this.player.volume());
             this.controlsRefs.volSlider.value = muted ? '0' : String(currentVol);
-            this.controlsRefs.volSliderVerticalInput.value = muted
-                ? '0'
-                : String(Math.round(currentVol * 100));
+            this.controlsRefs.volSliderVerticalInput.value = muted ? '0' : String(currentVol);
         });
 
         this.on('repeat', (data) => {
@@ -810,10 +807,10 @@ export class MusicUiPlugin extends Plugin<NMMusicPlayer, MusicUiOptions, MusicUi
             this.updateSeekPosition(ratio, this.progressRefs.seekFill, this.progressRefs.seekThumb, this.progressRefs.seekBar);
         }
 
-        const vol = this.player.volume();
+        const vol = Math.round(this.player.volume());
         this.controlsRefs.volSlider.value = String(vol);
-        this.controlsRefs.volSlider.style.setProperty('--vol-pct', `${vol * 100}%`);
-        this.controlsRefs.volSliderVerticalInput.value = String(Math.round(vol * 100));
+        this.controlsRefs.volSlider.style.setProperty('--vol-pct', `${vol}%`);
+        this.controlsRefs.volSliderVerticalInput.value = String(vol);
 
         this.currentRepeat = this.player.repeatState();
         this.applyRepeatIcon();

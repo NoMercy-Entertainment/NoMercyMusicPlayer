@@ -190,7 +190,7 @@ describe('MusicUiPlugin — mobile UX fixes', () => {
             await player.ready();
 
             const vertInput = document.querySelector('.nmmusic-vol-slider-vertical-input') as HTMLInputElement;
-            player.emit('volume', { level: 0.6 });
+            player.emit('volume', { level: 60 });
 
             expect(vertInput.value).toBe('60');
         });
