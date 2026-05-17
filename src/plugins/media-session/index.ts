@@ -3,6 +3,12 @@ import type { MediaSessionMetadata } from '@nomercy-entertainment/nomercy-player
 import type { NMMusicPlayer } from '../../index';
 import type { MusicPlaylistItem } from '../../types';
 
+/** Options for {@link MediaSessionPlugin}. */
+export interface MediaSessionOptions {
+	/** Base URL prepended to `item.cover` when constructing artwork `src`. */
+	artworkBaseUrl?: string;
+}
+
 /** Loose shape covering both the canonical `MusicPlaylistItem` and ad-hoc items. */
 interface MusicMetadataSource {
 	name?: string;
@@ -32,12 +38,15 @@ function resolveName(field: Array<{ name: string }> | string | undefined): strin
 export class MediaSessionPlugin extends BaseMediaSession<NMMusicPlayer<any>, MusicPlaylistItem> {
 	static override readonly id: string = 'media-session';
 
+	/** Narrows the inherited `opts` to the music-specific options shape. */
+	declare opts: MediaSessionOptions;
+
 	protected override getMetadata(item: MusicPlaylistItem): MediaSessionMetadata {
 		const x = item as MusicPlaylistItem & MusicMetadataSource;
 		const title = x.name ?? x.title ?? '';
 		const artist = resolveName(x.artist_track) || (x.artist ?? '');
 		const album = resolveName(x.album_track) || (x.album ?? '');
-		const base = (this.opts as { artworkBaseUrl?: string })?.artworkBaseUrl ?? '';
+		const base = this.opts?.artworkBaseUrl ?? '';
 		const coverSrc = x.cover ? (base ? `${base}${x.cover}` : x.cover) : undefined;
 		return {
 			title,

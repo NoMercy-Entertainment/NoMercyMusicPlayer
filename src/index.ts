@@ -53,10 +53,10 @@ import { CrossfadeTransitionStrategy } from '@nomercy-entertainment/nomercy-play
 import type {
 	AudioBackendKind,
 	CrossfadeOptions,
+	IMusicPlayer,
 	MusicEventMap,
 	MusicPlayerConfig,
 	MusicPlaylistItem,
-
 	PlayState,
 	RepeatState,
 	ShuffleState,
@@ -78,6 +78,7 @@ import {
 export type {
 	AudioBackendKind,
 	CrossfadeOptions,
+	IMusicPlayer,
 	MusicEventMap,
 	MusicPlayerConfig,
 	MusicPlaylistItem,
@@ -112,7 +113,7 @@ const _instances = new Map<string, NMMusicPlayer<any>>();
  */
 export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	extends EventEmitter<MusicEventMap>
-	implements IPlayer<MusicEventMap> {
+	implements IPlayer<MusicEventMap>, IMusicPlayer<T> {
 	readonly playerId: string = '';
 	container: HTMLElement = <HTMLElement>{};
 
@@ -294,10 +295,14 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 	backend(kind?: AudioBackendKind): IAudioBackend | Promise<void> {
 		if (kind === undefined) {
 			if (!this._backend) {
-				const configKind = (this.options as MusicPlayerConfig<T> | undefined)?.backend ?? 'audio-element';
-				this._backend = configKind === 'webaudio'
-					? new WebAudioBackend(this.container)
-					: new AudioElementBackend(this.container);
+				const opts = this.options as MusicPlayerConfig<T> | undefined;
+				const configKind = opts?.backend ?? 'audio-element';
+				const factory = opts?.backendFactory;
+				this._backend = factory
+					? factory(configKind, opts as MusicPlayerConfig<BasePlaylistItem>)
+					: configKind === 'webaudio'
+						? new WebAudioBackend(this.container)
+						: new AudioElementBackend(this.container);
 				this._wireBackend(this._backend);
 			}
 			return this._backend;
@@ -307,12 +312,13 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 				this._backend.dispose();
 				this._backend = undefined;
 			}
-			if (kind === 'webaudio') {
-				this._backend = new WebAudioBackend(this.container);
-			}
-			else {
-				this._backend = new AudioElementBackend(this.container);
-			}
+			const opts = this.options as MusicPlayerConfig<T> | undefined;
+			const factory = opts?.backendFactory;
+			this._backend = factory
+				? factory(kind, opts as MusicPlayerConfig<BasePlaylistItem>)
+				: kind === 'webaudio'
+					? new WebAudioBackend(this.container)
+					: new AudioElementBackend(this.container);
 			this._wireBackend(this._backend);
 			this.emit('backend:changed', { kind });
 		});
@@ -402,12 +408,18 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 			}
 		});
 
-		// Read duration from the backend directly — the raw DOM loadedmetadata
-		// event object does not carry a duration property.
+		// Read duration from the backend. If the backend hasn't resolved a valid
+		// duration yet (returns NaN / 0), fall back to the item's consumer-supplied
+		// `duration` field so seekbars have a length before metadata arrives.
 		instance.on('loadedmetadata', () => {
-			const duration = instance.duration();
-			if (duration > 0) {
-				this.emit('duration', { duration });
+			const backendDuration = instance.duration();
+			if (backendDuration > 0) {
+				this.emit('duration', { duration: backendDuration });
+				return;
+			}
+			const itemDuration = (this.current?.() as (MusicPlaylistItem & { duration?: number }) | undefined)?.duration;
+			if (typeof itemDuration === 'number' && itemDuration > 0) {
+				this.emit('duration', { duration: itemDuration });
 			}
 		});
 	}

@@ -1,4 +1,4 @@
-import type { BaseEventMap, BasePlayerConfig, BasePlaylistItem } from '@nomercy-entertainment/nomercy-player-core';
+import type { ActionOptions, BaseEventMap, BasePlayerConfig, BasePlaylistItem, IPlayer } from '@nomercy-entertainment/nomercy-player-core';
 import type { IAudioBackend } from './adapters/audio-backend/IAudioBackend';
 
 export interface ArtistRef {
@@ -64,12 +64,14 @@ export type { TimeState } from '@nomercy-entertainment/nomercy-player-core';
  * Music-specific events on top of `BaseEventMap`.
  *
  * Cursor change is signalled by `BaseEventMap.current` — listen to that for
- * "current track changed". Music adds events for repeat / shuffle / mute /
- * crossfade / EQ that don't apply to other player libraries.
+ * "current track changed". Music adds events for repeat / shuffle / crossfade /
+ * backend / EQ that don't apply to other player libraries.
+ *
+ * `'mute'` and `'volume'` are inherited from `BaseEventMap` — not re-declared here.
  */
 export interface MusicEventMap extends BaseEventMap {
-	'mute': { muted: boolean };
-	'volume': { level: number };
+	'current': { item: MusicPlaylistItem | undefined; index: number };
+	'backend:changed': { kind: AudioBackendKind };
 	'repeat': { state: RepeatState };
 	'shuffle': { state: ShuffleState };
 	'trackEndingSoon': { remaining: number; currentTrack: BasePlaylistItem };
@@ -98,6 +100,19 @@ export type AudioBackendFactory = (
 	kind: AudioBackendKind,
 	config: MusicPlayerConfig<BasePlaylistItem>,
 ) => IAudioBackend;
+
+/**
+ * Library-specific player contract. Consumers who accept either music or video
+ * players but need music-specific methods (crossfade, backend swap) should type
+ * their parameter as `IMusicPlayer` rather than `IPlayer<MusicEventMap>`.
+ */
+export interface IMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
+	extends IPlayer<MusicEventMap> {
+	backend(): IAudioBackend;
+	backend(kind: AudioBackendKind): Promise<void>;
+	crossfadeTo(track: T, opts?: CrossfadeOptions & ActionOptions): Promise<void>;
+	isTransitioning(): boolean;
+}
 
 /** Music player configuration. */
 export interface MusicPlayerConfig<T extends BasePlaylistItem = MusicPlaylistItem> extends BasePlayerConfig {

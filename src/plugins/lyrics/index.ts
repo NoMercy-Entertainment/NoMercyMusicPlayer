@@ -24,8 +24,6 @@ export interface LyricsOptions {
 	getLyricsUrl?: (track: MusicPlaylistItem) => string | undefined;
 	/** Auto-fetch on `current` event. Default `true`. */
 	autoFetch?: boolean;
-	/** Format hint — currently only LRC is implemented. */
-	format?: 'lrc';
 }
 
 interface LyricPayload {
@@ -58,7 +56,7 @@ export class LyricsPlugin extends Plugin<NMMusicPlayer<any>, LyricsOptions> {
 		this.on('current', (payload) => {
 			if (this.opts?.autoFetch === false)
 				return;
-			const item = payload?.item as MusicPlaylistItem | undefined;
+			const item = payload?.item;
 			if (!item) {
 				this.clear();
 				return;

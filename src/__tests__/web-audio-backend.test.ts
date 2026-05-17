@@ -273,7 +273,7 @@ describe('WebAudioBackend', () => {
 			const disposeSpy = vi.spyOn(old, 'dispose');
 
 			const events: string[] = [];
-			player.on('backend:changed' as any, () => events.push('backend:changed'));
+			player.on('backend:changed', () => events.push('backend:changed'));
 
 			await player.backend('webaudio');
 
