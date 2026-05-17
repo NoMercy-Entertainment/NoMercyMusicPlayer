@@ -362,6 +362,10 @@ export class NMMusicPlayer<T extends BasePlaylistItem = MusicPlaylistItem>
 			}
 		});
 
+		instance.on('playing', () => {
+			this.emit('playing', undefined);
+		});
+
 		instance.on('pause', () => {
 			if (self._playState === 'playing') {
 				self._playState = 'paused';

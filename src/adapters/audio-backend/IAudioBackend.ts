@@ -7,6 +7,11 @@ export type BackendEvent =
 	| 'loadedmetadata'
 	| 'canplay'
 	| 'play'
+	/**
+	 * Fires when media is actually rendering — after buffering resolves, not
+	 * just on element.play(). Use this to hide buffering spinners.
+	 */
+	| 'playing'
 	| 'pause'
 	| 'ended'
 	| 'timeupdate'

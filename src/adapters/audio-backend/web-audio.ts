@@ -159,6 +159,7 @@ export class WebAudioBackend implements IAudioBackend {
 		bridge('loadedmetadata', 'loadedmetadata');
 		bridge('canplay', 'canplay');
 		bridge('play', 'play');
+		bridge('playing', 'playing');
 		bridge('pause', 'pause');
 		bridge('ended', 'ended');
 		bridge('timeupdate', 'timeupdate');
