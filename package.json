@@ -152,17 +152,14 @@
 		"NoMercy"
 	],
 	"dependencies": {
-		"@nomercy-entertainment/nomercy-player-core": "file:../nomercy-player-kit"
+		"@nomercy-entertainment/nomercy-player-core": "file:../nomercy-player-kit",
+		"hls.js": ">=1.6.0"
 	},
 	"peerDependencies": {
-		"audiomotion-analyzer": ">=4.5.0",
-		"hls.js": ">=1.6.0"
+		"audiomotion-analyzer": ">=4.5.0"
 	},
 	"peerDependenciesMeta": {
 		"audiomotion-analyzer": {
-			"optional": true
-		},
-		"hls.js": {
 			"optional": true
 		}
 	},
